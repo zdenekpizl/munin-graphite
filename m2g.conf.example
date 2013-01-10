@@ -1,0 +1,13 @@
+[host1.domain1.local]
+address: host1.domain1.local
+
+[mta.domain1.local]
+graphitename: smtp
+
+[www.domain1.local]
+address: server1.domain1.local
+
+[mta2.domain1.local]
+graphitename: smtp2
+
+[jabber.domain1.local]
