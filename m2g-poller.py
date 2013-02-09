@@ -11,8 +11,7 @@ import struct
 import sys
 import time
 
-LOGGING_FORMAT = "%(asctime)s : %(levelname)s : %(message)s"
-HOSTLIST = ["localhost", "127.0.0.1"]
+LOGGING_FORMAT = "%(asctime)s:%(levelname)s:%(message)s"
 RE_LEFTRIGHT = re.compile(r"^(?P<left>\S+)\s+(?P<right>\S+)$")
 
 
@@ -162,17 +161,20 @@ def parse_args():
     parser = argparse.ArgumentParser(description="Send Munin statistics to Graphite.")
     parser.add_argument("--carbon",
                         action="store",
-                        help="Carbon hostport (ex: localhost:2003).")
-    parser.add_argument("-n", "--noop",
+                        help="Carbon host and Pickle port (ex: localhost:2004).")
+    parser.add_argument("--muninhosts",
+                        action="store",
+                        help="Comma separated list of hosts running Munin to query for stats.")
+    parser.add_argument("--noop",
                         action="store_true",
                         help="Don't actually send Munin data to Carbon.")
-    parser.add_argument("-v", "--verbose",
+    parser.add_argument("--poolsize", type=int, default=1,
+                        help="Pool size of simultaneous connections when polling multiple hosts.")
+    parser.add_argument("--verbose",
                         choices=[1, 2, 3],
                         default=2,
                         type=int,
                         help="Verbosity level. 1:ERROR, 2:INFO/Default, 3:DEBUG.")
-    parser.add_argument("--poolsize", type=int, default=1,
-                        help="Pool size of simultaneous connections for polling.")
 
     args = parser.parse_args()
     return args
@@ -186,7 +188,7 @@ def worker_return(retval):
     """Outputs any return values from each pool iteration."""
     logging.debug("Iteration Return Value: %s", retval)
 
-if __name__ == '__main__':
+def main():
     args = parse_args()
     if args.verbose == 1:
         LOGGING_LEVEL = logging.ERROR
@@ -197,8 +199,11 @@ if __name__ == '__main__':
 
     logging.basicConfig(format=LOGGING_FORMAT, level=LOGGING_LEVEL)
     pool = multiprocessing.Pool(args.poolsize)
-    for host in HOSTLIST:
-        logging.debug("Adding host %s to the pool.", host)
-        pool.apply_async(worker_bootstrap, args = (host, args,), callback = worker_return)
+    muninhosts = args.muninhosts.split(",")
+    for muninhost in muninhosts:
+        pool.apply_async(worker_bootstrap, args = (muninhost, args,), callback = worker_return)
     pool.close()
     pool.join()
+
+if __name__ == '__main__':
+    main()
