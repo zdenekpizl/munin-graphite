@@ -141,9 +141,6 @@ class Munin():
         for data_key in plugin_data:
             plugin_category = plugin_config["graph_category"]
             metric = "%s%s.%s.%s.%s" % (prefix, short_hostname, plugin_category, plugin_name, data_key)
-            
-            print metric
-
             value = plugin_data[data_key]
             logging.debug("Creating metric %s, value: %s", metric, value)
             data_list.append((metric, (timestamp, value)))
