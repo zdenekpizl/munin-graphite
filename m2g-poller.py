@@ -130,13 +130,20 @@ class Munin():
     def send_to_carbon(self, timestamp, plugin_name, plugin_config, plugin_data):
         """Send plugin data to Carbon over Pickle format."""
         carbon_host, carbon_port = self.args.carbon.split(":")
+        if self.args.noprefix:
+            prefix = ''
+        else:
+            prefix = "%s." % self.args.prefix
         data_list = []
         logging.info("Creating metric for plugin %s, timestamp: %d",
                      plugin_name, timestamp)
         short_hostname = self.hostname.split(".")[0]
         for data_key in plugin_data:
             plugin_category = plugin_config["graph_category"]
-            metric = "servers.%s.%s.%s.%s" % (short_hostname, plugin_category, plugin_name, data_key)
+            metric = "%s%s.%s.%s.%s" % (prefix, short_hostname, plugin_category, plugin_name, data_key)
+            
+            print metric
+
             value = plugin_data[data_key]
             logging.debug("Creating metric %s, value: %s", metric, value)
             data_list.append((metric, (timestamp, value)))
@@ -170,6 +177,14 @@ def parse_args():
                         help="Don't actually send Munin data to Carbon.")
     parser.add_argument("--poolsize", type=int, default=1,
                         help="Pool size of simultaneous connections when polling multiple hosts.")
+    parser.add_argument("--prefix",
+                        action="store",
+                        default="servers",
+                        help="Prefix used on graphite target's name (default='servers')")
+    parser.add_argument("--noprefix",
+                        action="store_true",
+                        default=False,
+                        help="Do not use a prefix on graphite target's name")
     parser.add_argument("--verbose",
                         choices=[1, 2, 3],
                         default=2,
