@@ -3,7 +3,6 @@
 
 import argparse
 import logging
-import multiprocessing
 import pickle
 import re
 import socket
@@ -14,18 +13,21 @@ import time
 LOGGING_FORMAT = "%(asctime)s:%(levelname)s:%(message)s"
 RE_LEFTRIGHT = re.compile(r"^(?P<left>\S+)\s+(?P<right>\S+)$")
 
+## TODO: Catch keyboard interrupt properly and die when requested
 
 class Munin():
     """Munin host object with querying getter functions."""
-    def __init__(self, hostname="localhost", port=4949, args=None):
+    def __init__(self, hostname, port=4949, args=None):
         self.hostname = hostname
         self.port = port
         self.args = args
 
     def go(self):
         """Bootstrap method to start processing hosts's Munin stats."""
-        self.connect()
-        self.process_host_stats()
+        while True:
+            self.connect()
+            self.process_host_stats()
+            time.sleep(self.args.interval)
 
     def connect(self):
         """Initial connection to Munin host."""
@@ -166,39 +168,33 @@ def parse_args():
     parser.add_argument("--carbon",
                         action="store",
                         help="Carbon host and Pickle port (ex: localhost:2004).")
-    parser.add_argument("--muninhosts",
+    parser.add_argument("--host",
                         action="store",
-                        help="Comma separated list of hosts running Munin to query for stats.")
+                        default="localhost",
+                        help="Comma separated list of hosts running Munin to query for stats. Default: %(default)s")
+    parser.add_argument("--interval",
+                        type=int,
+                        default=60,
+                        help="Interval (seconds) between polling Munin host for statistics. Default: %(default)s")
     parser.add_argument("--noop",
                         action="store_true",
-                        help="Don't actually send Munin data to Carbon.")
-    parser.add_argument("--poolsize", type=int, default=1,
-                        help="Pool size of simultaneous connections when polling multiple hosts.")
+                        help="Don't actually send Munin data to Carbon. Default: %(default)s")
     parser.add_argument("--prefix",
                         action="store",
                         default="servers",
-                        help="Prefix used on graphite target's name (default='servers')")
+                        help="Prefix used on graphite target's name. Default: %(default)s")
     parser.add_argument("--noprefix",
                         action="store_true",
                         default=False,
-                        help="Do not use a prefix on graphite target's name")
-    parser.add_argument("--verbose",
+                        help="Do not use a prefix on graphite target's name. Default: %(default)s")
+    parser.add_argument("--verbose","-v",
                         choices=[1, 2, 3],
                         default=2,
                         type=int,
-                        help="Verbosity level. 1:ERROR, 2:INFO/Default, 3:DEBUG.")
+                        help="Verbosity level. 1:ERROR, 2:INFO, 3:DEBUG. Default: %(default)d")
 
     args = parser.parse_args()
     return args
-
-def worker_bootstrap(host, args):
-    """Handles pool process allocation."""
-    munin_obj = Munin(hostname=host, args=args)
-    return munin_obj.go()
-
-def worker_return(retval):
-    """Outputs any return values from each pool iteration."""
-    logging.debug("Iteration Return Value: %s", retval)
 
 def main():
     args = parse_args()
@@ -210,12 +206,8 @@ def main():
         LOGGING_LEVEL = logging.INFO
 
     logging.basicConfig(format=LOGGING_FORMAT, level=LOGGING_LEVEL)
-    pool = multiprocessing.Pool(args.poolsize)
-    muninhosts = args.muninhosts.split(",")
-    for muninhost in muninhosts:
-        pool.apply_async(worker_bootstrap, args = (muninhost, args,), callback = worker_return)
-    pool.close()
-    pool.join()
+    munin = Munin(hostname=args.host, args=args)
+    munin.go()
 
 if __name__ == '__main__':
     main()
