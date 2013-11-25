@@ -21,6 +21,10 @@ class Munin():
         self.hostname = hostname
         self.port = port
         self.args = args
+        self.displayname = self.hostname.split(".")[0]
+
+        if self.args.displayname:
+            self.displayname = self.args.displayname
 
     def go(self):
         """Bootstrap method to start processing hosts's Munin stats."""
@@ -139,10 +143,10 @@ class Munin():
         data_list = []
         logging.info("Creating metric for plugin %s, timestamp: %d",
                      plugin_name, timestamp)
-        short_hostname = self.hostname.split(".")[0]
+
         for data_key in plugin_data:
             plugin_category = plugin_config["graph_category"]
-            metric = "%s%s.%s.%s.%s" % (prefix, short_hostname, plugin_category, plugin_name, data_key)
+            metric = "%s%s.%s.%s.%s" % (prefix, self.displayname, plugin_category, plugin_name, data_key)
             value = plugin_data[data_key]
             logging.debug("Creating metric %s, value: %s", metric, value)
             data_list.append((metric, (timestamp, value)))
@@ -171,7 +175,10 @@ def parse_args():
     parser.add_argument("--host",
                         action="store",
                         default="localhost",
-                        help="Comma separated list of hosts running Munin to query for stats. Default: %(default)s")
+                        help="Munin host to query for stats. Default: %(default)s")
+    parser.add_argument("--displayname",
+                        default=False,
+                        help="If defined, use this as the name to store metrics in Graphite instead of the Munin hostname.")
     parser.add_argument("--interval",
                         type=int,
                         default=60,
@@ -179,14 +186,14 @@ def parse_args():
     parser.add_argument("--noop",
                         action="store_true",
                         help="Don't actually send Munin data to Carbon. Default: %(default)s")
-    parser.add_argument("--prefix",
-                        action="store",
-                        default="servers",
-                        help="Prefix used on graphite target's name. Default: %(default)s")
     parser.add_argument("--noprefix",
                         action="store_true",
                         default=False,
                         help="Do not use a prefix on graphite target's name. Default: %(default)s")
+    parser.add_argument("--prefix",
+                        action="store",
+                        default="servers",
+                        help="Prefix used on graphite target's name. Default: %(default)s")
     parser.add_argument("--verbose","-v",
                         choices=[1, 2, 3],
                         default=2,
