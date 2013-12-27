@@ -28,10 +28,13 @@ class Munin():
 
     def go(self):
         """Bootstrap method to start processing hosts's Munin stats."""
-        while True:
+        self.connect()
+        self.process_host_stats()
+
+        while True and self.args.interval != 0:
+            time.sleep(self.args.interval)
             self.connect()
             self.process_host_stats()
-            time.sleep(self.args.interval)
 
     def connect(self):
         """Initial connection to Munin host."""
@@ -203,7 +206,7 @@ def parse_args():
     parser.add_argument("--interval",
                         type=int,
                         default=60,
-                        help="Interval (seconds) between polling Munin host for statistics. Default: %(default)s")
+                        help="Interval (seconds) between polling Munin host for statistics. If set to 0, exit after polling once. Default: %(default)s")
     parser.add_argument("--noop",
                         action="store_true",
                         help="Don't actually send Munin data to Carbon. Default: %(default)s")
