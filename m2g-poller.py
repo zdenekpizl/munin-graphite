@@ -106,7 +106,12 @@ class Munin():
                 response[multigraph] = {}
                 continue
 
-            key_name, key_value = current_line.split(" ", 1)
+            try:
+                key_name, key_value = current_line.split(" ", 1)
+            except ValueError:
+                # ignore broken plugins that don't return a value at all
+                continue
+
             if "." in key_name:
                 # Some keys have periods in them.
                 # If so, make their own nested dictionary.
