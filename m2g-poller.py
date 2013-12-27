@@ -70,17 +70,26 @@ class Munin():
     def fetch(self, plugin):
         """Fetch plugin's data fields from Munin."""
         self._sock.sendall("fetch %s\n" % plugin)
-        response = {}
+        response = { None: {} }
+        multigraph = None
+        multigraph_prefix = ""
         for current_line in self._iterline():
+            if current_line.startswith("multigraph "):
+                multigraph = current_line[11:]
+                multigraph_prefix = multigraph.rstrip(".") + "."
+                response[multigraph] = {}
+                continue
             # Some munin plugins have more than one space between key and value.
             full_key_name, key_value = RE_LEFTRIGHT.search(current_line).group(1, 2)
-            key_name = full_key_name.split(".")[0]
-            response[key_name] = key_value
+            key_name = multigraph_prefix + full_key_name.split(".")[0]
+            response[multigraph][key_name] = key_value
 
         return response
 
     def list_plugins(self):
         """Return a list of Munin plugins configured on a node. """
+        self._sock.sendall("cap multigraph\n")
+        self._readline()  # ignore response
         self._sock.sendall("list\n")
         plugin_list = self._readline().split(" ")
         return plugin_list
@@ -88,19 +97,25 @@ class Munin():
     def get_config(self, plugin):
         """Get config values for Munin plugin."""
         self._sock.sendall("config %s\n" % plugin)
-        response = {}
+        response = { None: {} }
+        multigraph = None
 
         for current_line in self._iterline():
+            if current_line.startswith("multigraph "):
+                multigraph = current_line[11:]
+                response[multigraph] = {}
+                continue
+
             key_name, key_value = current_line.split(" ", 1)
             if "." in key_name:
                 # Some keys have periods in them.
                 # If so, make their own nested dictionary.
                 key_root, key_leaf = key_name.split(".", 1)
                 if key_root not in response:
-                    response[key_root] = {}
-                response[key_root][key_leaf] = key_value
+                    response[multigraph][key_root] = {}
+                response[multigraph][key_root][key_leaf] = key_value
             else:
-                response[key_name] = key_value
+                response[multigraph][key_name] = key_value
 
         return response
 
@@ -123,10 +138,11 @@ class Munin():
             plugin_data = self.fetch(current_plugin)
             logging.debug("Plugin Data: %s", plugin_data)
             if self.args.carbon:
-                self.send_to_carbon(epoch_timestamp,
-                                    current_plugin,
-                                    plugin_config,
-                                    plugin_data)
+                for multigraph in plugin_config:
+                    self.send_to_carbon(epoch_timestamp,
+                                        current_plugin,
+                                        plugin_config[multigraph],
+                                        plugin_data[multigraph])
         end_timestamp = time.time() - start_timestamp
         self.close_connection()
         logging.info("Finished querying host %s (Execution Time: %.2f sec).",
