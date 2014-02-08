@@ -12,6 +12,7 @@ import time
 
 LOGGING_FORMAT = "%(asctime)s:%(levelname)s:%(message)s"
 RE_LEFTRIGHT = re.compile(r"^(?P<left>\S+)\s+(?P<right>\S+)$")
+RE_MUNIN_NODE_NAME = re.compile(r"^# munin node at\s+(?P<nodename>\S+)$")
 
 ## TODO: Catch keyboard interrupt properly and die when requested
 
@@ -33,12 +34,25 @@ class Munin():
     def go(self):
         """Bootstrap method to start processing hosts's Munin stats."""
         self.connect()
+        self.update_hostname()
         self.process_host_stats()
 
         while True and self.args.interval != 0:
             time.sleep(self.args.interval)
             self.connect()
             self.process_host_stats()
+
+    def update_hostname(self):
+        """Updating hostname from connection hello string."""
+        if self.args.displayname:
+            return
+        try:
+            node_name = RE_MUNIN_NODE_NAME.search(self.hello_string).group(1)
+            self.displayname = node_name
+        except AttributeError:
+            logging.info("Unable to obtain munin node name from: %s",
+                         self.hello_string)
+            return
 
     def connect(self):
         """Initial connection to Munin host."""
