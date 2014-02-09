@@ -48,7 +48,7 @@ class Munin():
             return
         try:
             node_name = RE_MUNIN_NODE_NAME.search(self.hello_string).group(1)
-            self.displayname = node_name
+            self.displayname = node_name.split(".")[0]
         except AttributeError:
             logging.info("Unable to obtain munin node name from: %s",
                          self.hello_string)
