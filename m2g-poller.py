@@ -109,7 +109,8 @@ class Munin():
                 key_name = multigraph_prefix + full_key_name.split(".")[0]
                 response[multigraph][key_name] = key_value
             except (KeyError, AttributeError):
-                logging.info("plugin multi_graph %s returns invalid data for host %s\n ", multigraph, self.hostname)
+                logging.info("plugin %s returned invalid data [%s] for host"
+                             " %s\n", plugin, current_line, self.hostname)
 
         return response
 
