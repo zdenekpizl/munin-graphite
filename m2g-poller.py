@@ -35,12 +35,14 @@ class Munin():
         """Bootstrap method to start processing hosts's Munin stats."""
         self.connect()
         self.update_hostname()
-        self.process_host_stats()
+        processing_time = self.process_host_stats()
+        interval = self.args.interval
 
-        while True and self.args.interval != 0:
-            time.sleep(self.args.interval)
+        while True and interval != 0:
+            sleep_time = max(interval - processing_time, 0)
+            time.sleep(sleep_time)
             self.connect()
-            self.process_host_stats()
+            processing_time = self.process_host_stats()
 
     def update_hostname(self):
         """Updating hostname from connection hello string."""
@@ -183,6 +185,7 @@ class Munin():
         self.close_connection()
         logging.info("Finished querying host %s (Execution Time: %.2f sec).",
                      self.hostname, end_timestamp)
+        return end_timestamp
 
     def send_to_carbon(self, timestamp, plugin_name, plugin_config, plugin_data):
         """Send plugin data to Carbon over Pickle format."""
