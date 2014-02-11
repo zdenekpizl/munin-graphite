@@ -26,6 +26,7 @@ class Munin():
         self.displayname = self.hostname.split(".")[0]
         self._sock = None
         self._conn = None
+        self._carbon_sock = None
         self.hello_string = None
 
         if self.args.displayname:
@@ -72,9 +73,26 @@ class Munin():
             logging.exception("Unable to communicate to Munin host %s, port: %s",
                               self.hostname, self.port)
 
+        if self.args.carbon:
+            self.connect_carbon()
+
+    def connect_carbon(self):
+        carbon_host, carbon_port = self.args.carbon.split(":")
+        try:
+            self._carbon_sock = socket.create_connection((carbon_host, carbon_port), 10)
+        except socket.error:
+            logging.exception("Unable to connect to Carbon on host %s, port: %s",
+                              carbon_host, carbon_port)
+            sys.exit(1)
+
     def close_connection(self):
         """Close connection to Munin host."""
         self._sock.close()
+
+    def close_carbon_connection(self):
+        """Close connection to Carbon host."""
+        if self._carbon_sock:
+            self._carbon_sock.close()
 
     def _readline(self):
         """Read one line from Munin output, stripping leading/trailing chars."""
@@ -183,13 +201,13 @@ class Munin():
                                      plugin_config, self.hostname)
         end_timestamp = time.time() - start_timestamp
         self.close_connection()
+        self.close_carbon_connection()
         logging.info("Finished querying host %s (Execution Time: %.2f sec).",
                      self.hostname, end_timestamp)
         return end_timestamp
 
     def send_to_carbon(self, timestamp, plugin_name, plugin_config, plugin_data):
         """Send plugin data to Carbon over Pickle format."""
-        carbon_host, carbon_port = self.args.carbon.split(":")
         if self.args.noprefix:
             prefix = ''
         else:
@@ -218,15 +236,11 @@ class Munin():
         header = struct.pack("!L", len(payload))
         message = header + payload
         try:
-            carbon_sock = socket.create_connection((carbon_host, carbon_port), 10)
-            carbon_sock.sendall(message)
-            carbon_sock.close()
+            self._carbon_sock.sendall(message)
             logging.info("Finished sending plugin %s data to Carbon for host %s.",
                          plugin_name, self.hostname)
         except socket.error:
-            logging.exception("Unable to connect to Carbon on host %s, port: %s",
-                              carbon_host, carbon_port)
-            sys.exit(1)
+            logging.exception("Unable to send data to Carbon")
 
 
 def parse_args():
