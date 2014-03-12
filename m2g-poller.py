@@ -20,14 +20,18 @@ RE_MUNIN_NODE_NAME = re.compile(r"^# munin node at\s+(?P<nodename>\S+)$")
 class Munin():
     """Munin host object with querying getter functions."""
     def __init__(self, hostname, port=4949, args=None):
-        self.hostname = hostname
-        self.port = port
-        self.args = args
-        self.displayname = self.hostname.split(".")[0]
+
+        self.hostname = None
+        self.remotenode = None
         self._sock = None
         self._conn = None
         self._carbon_sock = None
         self.hello_string = None
+
+        self.hostname, self.remotenode = hostname.split(":",1)
+        self.port = port
+        self.args = args
+        self.displayname = self.hostname.split(".")[0]
 
         if self.args.displayname:
             self.displayname = self.args.displayname
@@ -138,7 +142,12 @@ class Munin():
         """Return a list of Munin plugins configured on a node. """
         self._sock.sendall("cap multigraph\n")
         self._readline()  # ignore response
-        self._sock.sendall("list\n")
+
+        if self.remotenode:
+            self._sock.sendall("list %s\n" %self.remotenode)
+        else:
+            self._sock.sendall("list\n")
+
         plugin_list = self._readline().split(" ")
         return plugin_list
 
@@ -212,6 +221,11 @@ class Munin():
             prefix = ''
         else:
             prefix = "%s." % self.args.prefix
+
+        hostname = self.hostname
+        if self.remotenode:
+            hostname = self.remotenode
+
         data_list = []
         logging.info("Creating metric for plugin %s, timestamp: %d",
                      plugin_name, timestamp)
@@ -231,7 +245,7 @@ class Munin():
             return
 
         logging.info("Sending plugin %s data to Carbon for host %s.",
-                     plugin_name, self.hostname)
+                     plugin_name, hostname)
         payload = pickle.dumps(data_list)
         header = struct.pack("!L", len(payload))
         message = header + payload
@@ -252,7 +266,8 @@ def parse_args():
     parser.add_argument("--host",
                         action="store",
                         default="localhost",
-                        help="Munin host to query for stats. Default: %(default)s")
+                        help="Munin host to query for stats. You can specify indirect node after ':', "
+                             "i.e. --host localhost:remotenode. Default: %(default)s")
     parser.add_argument("--displayname",
                         default=False,
                         help="If defined, use this as the name to store metrics in Graphite instead of the Munin"
