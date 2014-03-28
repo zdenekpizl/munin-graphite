@@ -43,7 +43,10 @@ class Munin():
         self.port = port
         self.args = args
 
-        self.hostname, self.remotenode = hostname.split(":",1)
+        if ':' in hostname:
+            self.hostname, self.remotenode = hostname.split(":", 1)
+        else:
+            self.hostname = hostname
         self.port = port
         self.args = args
         self.displayname = self.hostname.split(".")[0]
