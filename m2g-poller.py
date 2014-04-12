@@ -149,7 +149,7 @@ class Munin():
         self._readline()  # ignore response
 
         if self.remotenode:
-            self._sock.sendall("list %s\n" %self.remotenode)
+            self._sock.sendall("list %s\n" % self.remotenode)
         else:
             self._sock.sendall("list\n")
 
