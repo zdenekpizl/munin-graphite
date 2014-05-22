@@ -371,6 +371,9 @@ def parse_args():
                         action="store",
                         default="servers",
                         help="Prefix used on graphite target's name. Default: %(default)s")
+    parser.add_argument("--logtosyslog",
+                        action="store_true",
+                        help="Log to syslog. No output on the command line.")
     parser.add_argument("--verbose", "-v",
                         choices=[1, 2, 3],
                         default=2,
@@ -458,9 +461,13 @@ def main():
     logger = logging.getLogger()
     logger.setLevel(logging_level)
     syslog = logging.handlers.SysLogHandler(address='/dev/log')
+    stdout = logging.StreamHandler(stream=sys.stdout)
     formatter = logging.Formatter('MUNIN-GRAPHITE: %(levelname)s %(message)s')
     syslog.setFormatter(formatter)
-    logger.addHandler(syslog)
+    if args.logtosyslog:
+        logger.addHandler(syslog)
+    else:
+        logger.addHandler(stdout)
 
     # block for setting handling of signals
     signal.signal(signal.SIGHUP, handler_hup)
