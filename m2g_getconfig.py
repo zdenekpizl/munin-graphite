@@ -5,20 +5,20 @@ import argparse
 import ConfigParser
 import logging
 import logging.handlers
+import pickle
 import re
+import socket
+import struct
 import sys
 import time
 import signal
+import threading
 import m2g_munin_thread
 
 RE_LEFTRIGHT = re.compile(r"^(?P<left>\S+)\s+(?P<right>\S+)$")
 RE_MUNIN_NODE_NAME = re.compile(r"^# munin node at\s+(?P<nodename>\S+)$")
 
-threads = []
 
-###
-# bellow are common function
-###
 def parse_args():
     """Parse command line arguments."""
     parser = argparse.ArgumentParser(description="Send Munin statistics to Graphite.")
@@ -71,26 +71,6 @@ def parse_args():
     return args
 
 
-###
-# stop all threads and exit
-###
-def handler_term(signum=signal.SIGTERM, frame=None):
-    global threads
-
-    for t in threads:
-        t.dostop()
-
-
-###
-# set all threads to reload information about all munin-node's plugins
-###
-def handler_hup(signum, frame=None):
-    global threads
-
-    for t in threads:
-        t.reload()
-
-
 def read_configuration(configfile):
     """
     Returns False if configuration file is not readable, list of dictionaries otherwise
@@ -131,66 +111,8 @@ def read_configuration(configfile):
 
     return hostscfg
 
-def list_plugins(self):
-    """Return a list of Munin plugins configured on a node. """
-    self._sock.sendall("cap multigraph\n")
-    self._readline()  # ignore response
-
-    if self.remotenode:
-        self.thread.logger.info("Thread %s: Asking for plugin list for remote node %s", self.thread.name, self.remotenode)
-        self._sock.sendall("list %s\n" % self.remotenode)
-    else:
-        self.thread.logger.info("Thread %s: Asking for plugin list for local node %s", self.thread.name, self.hostname)
-        self._sock.sendall("list\n")
-
-    plugin_list = self._readline().split(" ")
-    if self.args.filter:
-        try:
-            filteredlist = [plugin for plugin in plugin_list if re.search(self.args.filter, plugin, re.IGNORECASE)]
-            plugin_list = filteredlist
-        except re.error:
-            self.thread.logger.info("Thread %s: Filter regexp for plugin list is not valid: %s" % self.args.filter)
-        # if there is no filter or we have got an re.error, simply return full list
-    result_list = []
-    for plugin in plugin_list:
-        if len(plugin.strip()) > 0:
-            result_list.append(plugin)
-    return result_list
-
-def get_config(self, plugin):
-    """Get config values for Munin plugin."""
-    self._sock.sendall("config %s\n" % plugin)
-    response = {None: {}}
-    multigraph = None
-
-    for current_line in self._iterline():
-        if current_line.startswith("multigraph "):
-            multigraph = current_line[11:]
-            response[multigraph] = {}
-            continue
-
-        try:
-            key_name, key_value = current_line.split(" ", 1)
-        except ValueError:
-            # ignore broken plugins that don't return a value at all
-            continue
-
-        if "." in key_name:
-            # Some keys have periods in them.
-            # If so, make their own nested dictionary.
-            key_root, key_leaf = key_name.split(".", 1)
-            if key_root not in response:
-                response[multigraph][key_root] = {}
-            response[multigraph][key_root][key_leaf] = key_value
-        else:
-            response[multigraph][key_name] = key_value
-
-    return response
-
-
 
 def main():
-    global threads
     global logger
 
     args = parse_args()
@@ -213,11 +135,6 @@ def main():
     else:
         logger.addHandler(stdout)
 
-    # block for setting handling of signals
-    signal.signal(signal.SIGHUP, handler_hup)
-    signal.signal(signal.SIGTERM, handler_term)
-    signal.signal(signal.SIGINT, handler_term)
-
     hosts = list()
     if args.config:
         hosts = read_configuration(args.config)
@@ -225,22 +142,10 @@ def main():
         # no file configuration, trying to use commandline arguments only and construct one-item dictionary
         hosts.append({'host': args.host})
         # we have got some items in hosts's list
+
+    thread = m2g_munin_thread.MuninThread(host, args, logger)
     for host in hosts:
-        logging.info("Going to thread with config %s" % host)
-        threads.append(m2g_munin_thread.MuninThread(host, args, logger))
-
-    for t in threads:
-        t.start()
-
-    while True:
-        try:
-            if not any([t.isAlive() for t in threads]):
-                logging.info("All threads finished, exiting.")
-                break
-            else:
-                time.sleep(1)
-        except KeyboardInterrupt:
-            handler_term()
+        m = thread.munin
 
 
 if __name__ == '__main__':
