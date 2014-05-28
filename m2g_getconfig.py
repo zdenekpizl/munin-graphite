@@ -5,15 +5,10 @@ import argparse
 import ConfigParser
 import logging
 import logging.handlers
-import pickle
 import re
-import socket
-import struct
 import sys
-import time
-import signal
-import threading
 import m2g_munin_thread
+import elasticsearch as ES
 
 RE_LEFTRIGHT = re.compile(r"^(?P<left>\S+)\s+(?P<right>\S+)$")
 RE_MUNIN_NODE_NAME = re.compile(r"^# munin node at\s+(?P<nodename>\S+)$")
@@ -37,7 +32,11 @@ def parse_args():
                              " hostname.")
     parser.add_argument("--carbon",
                         action="store",
-                        help="Carbon host and Pickle port (ex: localhost:2004).")
+                        help="ElasticSearchServer:Port port (ex: localhost:9200).")
+    parser.add_argument("--esindex",
+                        action="store",
+                        default="gd-munin-node",
+                        help="ElasticSearch document index. Default: %(default)s.")
     parser.add_argument("--filter",
                         action="store",
                         default='.*',
@@ -143,9 +142,42 @@ def main():
         hosts.append({'host': args.host})
         # we have got some items in hosts's list
 
-    thread = m2g_munin_thread.MuninThread(host, args, logger)
     for host in hosts:
-        m = thread.munin
+        cfg = argparse.Namespace()
+        dcfg = vars(cfg)
+
+        #construct final arguments Namespace
+        for v in vars(args):
+            try:
+                dcfg[v] = host[v]
+            except KeyError:
+                dcfg[v] = getattr(args, v, None)
+
+        plugins_config = {}
+        munin = m2g_munin_thread.Munin(hostname=host['host'], args=cfg, logger=logger)
+        munin.connect()
+        munin.update_hostname()
+        plugins = munin.list_plugins()
+        for current_plugin in plugins:
+            try:
+                plugins_config[current_plugin]
+            except KeyError:
+                plugins_config[current_plugin] = munin.get_config(current_plugin)
+                #print "  Config: %s" % plugins_config[current_plugin]
+                logger.debug("Thread %s: Plugin Config: %s", munin.hostname, plugins_config[current_plugin])
+
+        host['prefix'] = cfg.prefix
+        host['plugins'] = plugins_config
+
+    try:
+        es = ES.Elasticsearch(args.es, sniff_on_start=False)
+        for host in hosts:
+            nodeid = host['prefix']+"."+host['host']
+            res = es.index(index=args.esindex, id=nodeid, doc_type='node', body=host)
+            print res
+    except Exception as e:
+            print "Error: %r" % e
+            logger.debug("Thread %s: Cannot connect to ElasticSearch server: %s", args.es)
 
 
 if __name__ == '__main__':

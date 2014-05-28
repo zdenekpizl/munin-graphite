@@ -98,8 +98,12 @@ class Munin():
             self.logger.exception("Thread %s: Unable to communicate to Munin host %s, port: %s",
                              self.hostname, self.hostname, self.port)
 
-        if self.args.carbon:
-            self.connect_carbon()
+        try:
+            if self.args.carbon:
+                self.connect_carbon()
+        except AttributeError as e:
+            self.logger.debug("Thread %s: connection to Carbon not defined, that is not necessary an error")
+
 
     def connect_carbon(self):
         carbon_host, carbon_port = self.args.carbon.split(":")
@@ -139,8 +143,8 @@ class Munin():
     def fetch(self, plugin):
         """Fetch plugin's data fields from Munin."""
         self._sock.sendall("fetch %s\n" % plugin)
-        response = {None: {}}
-        multigraph = None
+        response = {plugin: {}}
+        multigraph = plugin
         multigraph_prefix = ""
         for current_line in self._iterline():
             if current_line.startswith("multigraph "):
@@ -153,6 +157,7 @@ class Munin():
                 full_key_name, key_value = RE_LEFTRIGHT.search(current_line).group(1, 2)
                 key_name = multigraph_prefix + full_key_name.split(".")[0]
                 response[multigraph][key_name] = key_value
+                print "***************************** Response: %r" % response
             except (KeyError, AttributeError):
                 self.logger.info("Thread %s: Plugin %s returned invalid data [%s] for host"
                             " %s\n", self.hostname, plugin, current_line, self.hostname)
@@ -188,10 +193,14 @@ class Munin():
     def get_config(self, plugin):
         """Get config values for Munin plugin."""
         self._sock.sendall("config %s\n" % plugin)
-        response = {None: {}}
-        multigraph = None
+        response = {plugin: {}}
+        multigraph = plugin
 
         for current_line in self._iterline():
+        
+#            print "Line: %s\n" % current_line
+#            print "Response start: %r" %response
+        
             if current_line.startswith("multigraph "):
                 multigraph = current_line[11:]
                 response[multigraph] = {}
@@ -207,11 +216,16 @@ class Munin():
                 # Some keys have periods in them.
                 # If so, make their own nested dictionary.
                 key_root, key_leaf = key_name.split(".", 1)
-                if key_root not in response:
+#                print "Response . in key_name: %r\n" %response
+                if key_root not in response[plugin]:
                     response[multigraph][key_root] = {}
+#                print "multigraph: %r\nkey_root: %r\nkey_leaf: %r\nkey_value: %r\n" % (multigraph, key_root, key_leaf, key_value)
                 response[multigraph][key_root][key_leaf] = key_value
             else:
+#                print "%r\n" % response
                 response[multigraph][key_name] = key_value
+
+#            print "Response final: %r\n" %response
 
         return response
 
@@ -242,6 +256,10 @@ class Munin():
             self.logger.debug("Thread %s: Plugin Data: %s", self.hostname, plugin_data)
             if self.args.carbon:
                 for multigraph in self.plugins_config[current_plugin]:
+                    print "\n>>>>>>>>>>>>>>>>>> current plugin: %s" % current_plugin
+                    print ">>>>>>>>>>>>>>>>>> multigraph: %s" % multigraph
+                    print ">>>>>>>>>>>>>>>>>> plugin_data: %r" % plugin_data
+                    
                     try:
                         self.send_to_carbon(epoch_timestamp,
                                             current_plugin,
