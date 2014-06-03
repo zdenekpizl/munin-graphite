@@ -168,8 +168,8 @@ def main():
 
         host['prefix'] = cfg.prefix
         host['plugins'] = plugins_config
-        if cfg.host:
-            host['host'] = cfg.host
+        if cfg.displayname:
+            host['host'] = cfg.displayname
 
     try:
         es = ES.Elasticsearch(args.es, sniff_on_start=False)
