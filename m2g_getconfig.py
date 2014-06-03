@@ -30,7 +30,7 @@ def parse_args():
                         default=False,
                         help="If defined, use this as the name to store metrics in Graphite instead of the Munin"
                              " hostname.")
-    parser.add_argument("--carbon",
+    parser.add_argument("--es",
                         action="store",
                         help="ElasticSearchServer:Port port (ex: localhost:9200).")
     parser.add_argument("--esindex",
@@ -168,6 +168,8 @@ def main():
 
         host['prefix'] = cfg.prefix
         host['plugins'] = plugins_config
+        if cfg.host:
+            host['host'] = cfg.host
 
     try:
         es = ES.Elasticsearch(args.es, sniff_on_start=False)
