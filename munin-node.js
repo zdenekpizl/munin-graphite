@@ -26,6 +26,7 @@ config.es = 'http://poc-render01.na.getgooddata.com:9200/';
 
 function searchES(config, searchTerm) {
 
+    // TODO sort plugings by category and plugin's name
     // Form up any query here
     var esquery = '{"query": { "match": { "host": "' + searchTerm + '"}}}';
 
@@ -74,7 +75,7 @@ var func = function(callback) {
         editable: true,
         failover: false,
         panel_hints: true,
-        style: "dark",
+        style: "light",
         nav: [{
             type: "timepicker",
             collapse: false,
@@ -117,7 +118,7 @@ var func = function(callback) {
         var g_title = p[plugin]['graph_title'];
         var g_category = p[plugin]['graph_category'] || 'misc';
         var g_linewidth = 2;
-        var g_areafill = 4;
+        var g_areafill = 1;
         var g_stacked = 'false';
         var g_vlabel = p[plugin]['graph_vlabel'] || '';
 
@@ -128,6 +129,7 @@ var func = function(callback) {
             if (d.substr(0,6) != 'graph_') {
                 t = prefix+'.'+node+'.'+g_category+'.'+plugin+'.'+d;
                 // how to interpret datapoints
+                // TODO percentage, colors, templates/filters, cdef (optionaly)
                 if ("type" in p[plugin][d] && p[plugin][d]["type"] == "DERIVE")
                     t = "derivative(" + t + ")";
                 if ("type" in p[plugin][d] && p[plugin][d]["type"] == "COUNTER")
@@ -141,7 +143,7 @@ var func = function(callback) {
                 if ("draw" in p[plugin][d] && p[plugin][d]["draw"].substr(0,4) == "LINE")
                     g_linewidth = (p[plugin][d]["draw"].substr(4) || g_linewidth);
                 if ("draw" in p[plugin][d] && p[plugin][d]["draw"].substr(0,4) == "AREA" && g_stacked == 'false')
-                    g_areafill = (p[plugin][d]["draw"].substr(4) || g_areafill);
+                    g_areafill = (p[plugin][d]["draw"].substr(4) || 4);
 
 
                 a = p[plugin][d]["label"];
