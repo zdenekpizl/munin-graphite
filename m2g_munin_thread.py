@@ -157,7 +157,7 @@ class Munin():
                 full_key_name, key_value = RE_LEFTRIGHT.search(current_line).group(1, 2)
                 key_name = multigraph_prefix + full_key_name.split(".")[0]
                 response[multigraph][key_name] = key_value
-                print "***************************** Response: %r" % response
+                #print "***************************** Response: %r" % response
             except (KeyError, AttributeError):
                 self.logger.info("Thread %s: Plugin %s returned invalid data [%s] for host"
                             " %s\n", self.hostname, plugin, current_line, self.hostname)
@@ -256,9 +256,9 @@ class Munin():
             self.logger.debug("Thread %s: Plugin Data: %s", self.hostname, plugin_data)
             if self.args.carbon:
                 for multigraph in self.plugins_config[current_plugin]:
-                    print "\n>>>>>>>>>>>>>>>>>> current plugin: %s" % current_plugin
-                    print ">>>>>>>>>>>>>>>>>> multigraph: %s" % multigraph
-                    print ">>>>>>>>>>>>>>>>>> plugin_data: %r" % plugin_data
+                    #print "\n>>>>>>>>>>>>>>>>>> current plugin: %s" % current_plugin
+                    #print ">>>>>>>>>>>>>>>>>> multigraph: %s" % multigraph
+                    #print ">>>>>>>>>>>>>>>>>> plugin_data: %r" % plugin_data
                     
                     try:
                         self.send_to_carbon(epoch_timestamp,
