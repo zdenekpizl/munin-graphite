@@ -129,7 +129,7 @@ var func = function(callback) {
             if (d.substr(0,6) != 'graph_') {
                 t = prefix+'.'+node+'.'+g_category+'.'+plugin+'.'+d;
                 // how to interpret datapoints
-                // TODO percentage, colors, templates/filters, cdef (optionaly)
+                // TODO percentage (graph_args), colors, templates/filters, cdef (optionaly)
                 if ("type" in p[plugin][d] && p[plugin][d]["type"] == "DERIVE")
                     t = "derivative(" + t + ")";
                 if ("type" in p[plugin][d] && p[plugin][d]["type"] == "COUNTER")
