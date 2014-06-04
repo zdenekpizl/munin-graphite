@@ -39,9 +39,8 @@ function searchES(config, searchTerm) {
             async: false
         });
 
-    var jsonData = jQuery.parseJSON(json.responseText);
     // You can then do anything you like with this jsonData
-    return jsonData;
+    return jQuery.parseJSON(json.responseText);
 }
 
 var func = function(callback) {
@@ -113,12 +112,14 @@ var func = function(callback) {
     var prefix = data.hits.hits[0]._source.prefix;
     var t, a, ds;
    for (var plugin in plugins) {
-        var panels = [];
-
         // get information about actual graph
         var p = plugins[plugin];
         var g_title = p[plugin]['graph_title'];
-        var g_category = p[plugin]['graph_category'];
+        var g_category = p[plugin]['graph_category'] || 'misc';
+        var g_linewidth = 2;
+        var g_areafill = 4;
+        var g_stacked = 'false';
+        var g_vlabel = p[plugin]['graph_vlabel'] || '';
 
         // iterate through datasources and create targets as JSON struct
         ds = [];
@@ -126,11 +127,22 @@ var func = function(callback) {
             var ta = {};
             if (d.substr(0,6) != 'graph_') {
                 t = prefix+'.'+node+'.'+g_category+'.'+plugin+'.'+d;
-
+                // how to interpret datapoints
                 if ("type" in p[plugin][d] && p[plugin][d]["type"] == "DERIVE")
                     t = "derivative(" + t + ")";
                 if ("type" in p[plugin][d] && p[plugin][d]["type"] == "COUNTER")
                     t = "perSecond(" + t + ")";
+
+                // style of line/area
+                if ("draw" in p[plugin][d] && p[plugin][d]["draw"].substr(0,9) == "AREASTACK")
+                    g_stacked = 'true';
+                if ("draw" in p[plugin][d] && p[plugin][d]["draw"].substr(0,5) == "STACK")
+                    g_stacked = 'true';
+                if ("draw" in p[plugin][d] && p[plugin][d]["draw"].substr(0,4) == "LINE")
+                    g_linewidth = (p[plugin][d]["draw"].substr(4) || g_linewidth);
+                if ("draw" in p[plugin][d] && p[plugin][d]["draw"].substr(0,4) == "AREA" && g_stacked == 'false')
+                    g_areafill = (p[plugin][d]["draw"].substr(4) || g_areafill);
+
 
                 a = p[plugin][d]["label"];
                 ta.target = "alias("+t+", '"+a+"')";
@@ -151,10 +163,25 @@ var func = function(callback) {
                 },
                 {
                     title: g_title,
+                    leftYAxisLabel: g_vlabel,
                     type: 'graphite',
                     span: 9,
-                    fill: 1,
-                    linewidth: 2,
+                    lines: true,
+                    fill: g_areafill,
+                    linewidth: g_linewidth,
+                    points: false,
+                    pointradius: 5,
+                    bars: false,
+                    stack: g_stacked,
+                    legend: {
+                        show: true,
+                        values: false,
+                        min: false,
+                        max: false,
+                        current: false,
+                        total: false,
+                        avg: false
+                    },
                     targets: ds
                 }]
             });
