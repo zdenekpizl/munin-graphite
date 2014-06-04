@@ -154,6 +154,7 @@ def main():
                 dcfg[v] = getattr(args, v, None)
 
         plugins_config = {}
+        hostplugins = []
         munin = m2g_munin_thread.Munin(hostname=host['host'], args=cfg, logger=logger)
         munin.connect()
         munin.update_hostname()
@@ -162,12 +163,14 @@ def main():
             try:
                 plugins_config[current_plugin]
             except KeyError:
-                plugins_config[current_plugin] = munin.get_config(current_plugin)
-                #print "  Config: %s" % plugins_config[current_plugin]
-                logger.debug("Thread %s: Plugin Config: %s", munin.hostname, plugins_config[current_plugin])
+                plugins_config["plugin"] = munin.get_config(current_plugin)
+                plugins_config["plugin_name"]=current_plugin
+                hostplugins.append(plugins_config.copy())
+                print "  Config %s: %s" % (current_plugin,plugins_config)
+                logger.debug("Thread %s: Plugin Config: %s", munin.hostname, plugins_config)
 
         host['prefix'] = cfg.prefix
-        host['plugins'] = plugins_config
+        host['plugins'] = hostplugins
         if cfg.displayname:
             host['host'] = cfg.displayname
 
