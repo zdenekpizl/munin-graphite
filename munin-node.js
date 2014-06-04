@@ -111,7 +111,7 @@ var func = function(callback) {
     // here we've got plugins of matched node
     var plugins = data.hits.hits[0]._source.plugins;
     var prefix = data.hits.hits[0]._source.prefix;
-    var ds;
+    var t, a, ds;
    for (var plugin in plugins) {
         var panels = [];
 
@@ -121,15 +121,17 @@ var func = function(callback) {
         var g_category = p[plugin]['graph_category'];
 
         // iterate through datasources and create targets as JSON struct
-        var t;
-        var a;
         ds = [];
         for (var d in p[plugin]) {
             var ta = {};
             if (d.substr(0,6) != 'graph_') {
                 t = prefix+'.'+node+'.'+g_category+'.'+plugin+'.'+d;
+
                 if ("type" in p[plugin][d] && p[plugin][d]["type"] == "DERIVE")
                     t = "derivative(" + t + ")";
+                if ("type" in p[plugin][d] && p[plugin][d]["type"] == "COUNTER")
+                    t = "perSecond(" + t + ")";
+
                 a = p[plugin][d]["label"];
                 ta.target = "alias("+t+", '"+a+"')";
                 ds.push(JSON.parse(JSON.stringify(ta)));
