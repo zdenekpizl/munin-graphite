@@ -184,7 +184,7 @@ var func = function(callback) {
                 }
                 ta.target = "alias("+t+", '"+a+"')";
                 //ds.push(JSON.parse(JSON.stringify(ta)));
-                tempds[d].push(JSON.parse(JSON.stringify(ta)));
+                tempds[d].(JSON.parse(JSON.stringify(ta)));
             }
         }
 
