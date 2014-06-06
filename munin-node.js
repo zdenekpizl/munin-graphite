@@ -48,7 +48,7 @@ var func = function(callback) {
 
     // Setup variables
     var node = '';
-    var def_linewidth = '2';
+    var def_linewidth = 2;
     // Set a default timespan if one isn't specified
     var timspan = '6h';
     // Intialize a skeleton object of dashboard
