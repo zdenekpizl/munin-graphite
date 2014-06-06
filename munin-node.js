@@ -48,6 +48,7 @@ var func = function(callback) {
 
     // Setup variables
     var node = '';
+    var def_linewidth = '2';
     // Set a default timespan if one isn't specified
     var timspan = '6h';
     // Intialize a skeleton object of dashboard
@@ -95,6 +96,9 @@ var func = function(callback) {
     if(!_.isUndefined(ARGS.from)) {
         timspan = ARGS.from;
     }
+    if(!_.isUndefined(ARGS.line)) {
+        def_linewidth = ARGS.line;
+    }
 
     // searchES() should return just 1 result with a node or empty set
     var data = searchES(config, node);
@@ -117,13 +121,16 @@ var func = function(callback) {
         var p = plugins[plugin];
         var g_title = p[plugin]['graph_title'];
         var g_info = p[plugin]['graph_info'] || '';
+        var g_args = p[plugin]['graph_info'] || '';
         var g_category = p[plugin]['graph_category'] || 'misc';
         var g_period = p[plugin]['graph_period'] || 'second';
-        var g_linewidth = 2;
+        var g_linewidth = def_linewidth;
         var g_areafill = 1;
         var g_stacked = false;
         var g_left_y_format = "short"
         var g_vlabel = p[plugin]['graph_vlabel'] || '';
+        var g_upperlimit = "auto";
+        var g_lowerlimit = "auto";
 
         // iterate through datasources and create targets as JSON struct
         ds = [];
@@ -148,21 +155,31 @@ var func = function(callback) {
                 if ("draw" in p[plugin][d] && p[plugin][d]["draw"].substr(0,4) == "AREA" && g_stacked == 'false')
                     g_areafill = (p[plugin][d]["draw"].substr(4) || 4);
 
-
                 a = p[plugin][d]["label"];
                 ta.target = "alias("+t+", '"+a+"')";
                 ds.push(JSON.parse(JSON.stringify(ta)));
             }
         }
 
-       // modify units of y-axis in case there is notice of bytes or bits
+        // modify units of y-axis in case there is notice of bytes or bits
         if (/bytes/i.test(g_vlabel) || /bytes/i.test(g_info))
             g_left_y_format = "bytes";
         if (/bits/i.test(g_vlabel) || /bits/i.test(g_info))
             g_left_y_format = "bytes";
 
-       // in case there is graph_period variable in description, do a replacement
-        g_vlabel.replace("\${graph_period}", g_period);
+        // in case there is graph_period variable in description, do a replacement
+        g_vlabel = g_vlabel.replace("\${graph_period}", g_period);
+
+        // set correct options if defined in graph_args
+        // upper limit
+        var foo = g_args.match("(--upper-limit|-u) ([0123456789]+)");
+        if( foo instanceof Array ) {
+            g_upperlimit = foo[2];
+        }
+        foo = g_args.match("(--lower-limit|-l) ([0123456789]+)");
+        if( foo instanceof Array ) {
+            g_lowerlimit = foo[2];
+        }
 
         // create rows with targets and appropriate configuration
         dashboard.rows.push({
