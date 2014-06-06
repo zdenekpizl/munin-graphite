@@ -187,10 +187,14 @@ var func = function(callback) {
             }
         }
         // and then add the rest of metrics not mentioned in graph_order
-        for (var t in tempds) {
-            if (g_order.indexOf(t) == -1 ) {
-                var ordi = tempds[t];
+        for (var tds in tempds) {
+            if (g_order && g_order.indexOf(tds) == -1 ) {
+                var ordi = tempds[tds];
                 ds.push(tempds[ordi]);
+            }
+            else
+            {
+              ds = JSON.parse(JSON.stringify(tempds));
             }
         }
 
