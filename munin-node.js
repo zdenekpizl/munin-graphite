@@ -129,8 +129,8 @@ var func = function(callback) {
         var g_stacked = false;
         var g_left_y_format = "short"
         var g_vlabel = p[plugin]['graph_vlabel'] || '';
-        var g_upperlimit = "auto";
-        var g_lowerlimit = "auto";
+        var g_upperlimit = null;
+        var g_lowerlimit = null;
         var g_percentage = false;
         var g_aliascolors = {};
 
