@@ -131,11 +131,19 @@ var func = function(callback) {
         var g_vlabel = p[plugin]['graph_vlabel'] || '';
         var g_upperlimit = "auto";
         var g_lowerlimit = "auto";
+        var g_percentage = false;
+        var g_aliascolors = [];
 
         // iterate through datasources and create targets as JSON struct
         ds = [];
         for (var d in p[plugin]) {
             var ta = {};
+            var ca = {};
+            /*
+                      "aliasColors": {
+            "load": "#3F2B5B"
+          },
+          */
             if (d.substr(0,6) != 'graph_') {
                 t = prefix+'.'+node+'.'+g_category+'.'+plugin+'.'+d;
                 // how to interpret datapoints
@@ -155,7 +163,10 @@ var func = function(callback) {
                 if ("draw" in p[plugin][d] && p[plugin][d]["draw"].substr(0,4) == "AREA" && g_stacked == 'false')
                     g_areafill = (p[plugin][d]["draw"].substr(4) || 4);
 
-                a = p[plugin][d]["label"];
+                a = p[plugin][d]["label"] || d;
+                if("colour" in p[plugin][d]) {
+                    ca[a] = "#"+ p[plugin][d]["colour"];
+                }
                 ta.target = "alias("+t+", '"+a+"')";
                 ds.push(JSON.parse(JSON.stringify(ta)));
             }
@@ -175,6 +186,9 @@ var func = function(callback) {
         var foo = g_args.match("(--upper-limit|-u) ([0123456789]+)");
         if( foo instanceof Array ) {
             g_upperlimit = foo[2];
+            if (parseInt(foo[2]) == 100) {
+                g_percentage = true;
+            }
         }
         foo = g_args.match("(--lower-limit|-l) ([0123456789]+)");
         if( foo instanceof Array ) {
@@ -221,6 +235,16 @@ var func = function(callback) {
                         total: false,
                         avg: false
                     },
+                    grid: {
+                        max: g_upperlimit,
+                        min: g_lowerlimit,
+                        threshold1: null,
+                        threshold2: null,
+                        threshold1Color: "rgba(216, 200, 27, 0.27)",
+                        threshold2Color: "rgba(234, 112, 112, 0.22)"
+                    },
+                    percentage: g_percentage,
+                    aliasColors: g_aliascolors,
                     targets: ds
                 }]
             });
