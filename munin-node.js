@@ -117,14 +117,14 @@ var func = function(callback) {
         var p = plugins[plugin];
         var g_title = p[plugin]['graph_title'];
         var g_category = p[plugin]['graph_category'] || 'misc';
-        var g_linewidth = 2;
-        var g_areafill = 1;
-        var g_stacked = 'false';
-        var g_vlabel = p[plugin]['graph_vlabel'] || '';
 
         // iterate through datasources and create targets as JSON struct
         ds = [];
         for (var d in p[plugin]) {
+            var g_linewidth = 2;
+            var g_areafill = 1;
+            var g_stacked = 'false';
+            var g_vlabel = p[plugin]['graph_vlabel'] || '';
             var ta = {};
             if (d.substr(0,6) != 'graph_') {
                 t = prefix+'.'+node+'.'+g_category+'.'+plugin+'.'+d;
