@@ -138,23 +138,6 @@ var func = function(callback) {
         // iterate through datasources and create targets as JSON struct
         ds = [];
         var tempds = {};
-/*
-"proc_pri":
-{"proc_pri":
- {
- "graph_category": "processes",
-
- "locked": {"info": "The number of processes that have pages locked into memory (for real-time and custom IO)", "draw": "STACK", "label": "locked in memory"},
- "graph_order": "low high locked",
- "high": {"info": "The number of high-priority processes (tasks)", "draw": "STACK", "label": "high priority"},
- "graph_vlabel": "Number of processes",
- "graph_title": "Processes priority",
- "low": {"info": "The number of low-priority processes (tasks)", "draw": "AREA", "label": "low priority"},
- "graph_info": "This graph shows number of processes at each priority",
- "graph_args": "--base 1000 -l 0"
-  }
-},
-        */
 
         for (var d in p[plugin]) {
             var ta = {};
@@ -184,20 +167,32 @@ var func = function(callback) {
                 }
                 ta.target = "alias("+t+", '"+a+"')";
                 //ds.push(JSON.parse(JSON.stringify(ta)));
-                tempds[d]=(JSON.parse(JSON.stringify(ta)));
+                tempds[d]=JSON.parse(JSON.stringify(ta));
             }
         }
 
         // there is
         // if there is defined specific order of metrics in graph, prepare targets in that order
         if (g_order) {
-            g_order = g_order.split(' ');
-            for (var ordds in g_order ) {
-                ds.push(tempds[ordds]);
+            g_order = g_order.split(/[\s]+/);
+            // the order should be set not for all metrics within graph
+            // so first add those ordered
+            for (var i=0; i<g_order.length; i++) {
+                if (i< tempds.length) {
+                    var ordi = g_order[i];
+                    ds.push(tempds[ordi]);
+                }
             }
-        }
+            // and then add the rest of metrics not mentioned in graph_order
+            for (var t in tempds) {
+                if (g_order.indexOf(t) == -1 ) {
+                    var ordi = tempds[t];
+                    ds.push(tempds[ordi]);
+                }
+            }
+}
 
-        // modify units of y-axis in case there is notice of bytes or bits
+        // modify units of y-axis in case there is any sign it could be of bytes or bits
         if (/bytes/i.test(g_vlabel) || /bytes/i.test(g_info))
             g_left_y_format = "bytes";
         if (/bits/i.test(g_vlabel) || /bits/i.test(g_info))
