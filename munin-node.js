@@ -97,7 +97,7 @@ var func = function(callback) {
         timspan = ARGS.from;
     }
     if(!_.isUndefined(ARGS.line)) {
-        def_linewidth = ARGS.line;
+        def_linewidth = parseInt(ARGS.line);
     }
 
     // searchES() should return just 1 result with a node or empty set
@@ -132,18 +132,13 @@ var func = function(callback) {
         var g_upperlimit = "auto";
         var g_lowerlimit = "auto";
         var g_percentage = false;
-        var g_aliascolors = [];
+        var g_aliascolors = {};
 
         // iterate through datasources and create targets as JSON struct
         ds = [];
         for (var d in p[plugin]) {
             var ta = {};
-            var ca = {};
-            /*
-                      "aliasColors": {
-            "load": "#3F2B5B"
-          },
-          */
+
             if (d.substr(0,6) != 'graph_') {
                 t = prefix+'.'+node+'.'+g_category+'.'+plugin+'.'+d;
                 // how to interpret datapoints
@@ -159,13 +154,13 @@ var func = function(callback) {
                 if ("draw" in p[plugin][d] && p[plugin][d]["draw"].substr(0,5) == "STACK")
                     g_stacked = true;
                 if ("draw" in p[plugin][d] && p[plugin][d]["draw"].substr(0,4) == "LINE")
-                    g_linewidth = (p[plugin][d]["draw"].substr(4) || g_linewidth);
+                    g_linewidth = (parseInt(p[plugin][d]["draw"].substr(4)) || g_linewidth);
                 if ("draw" in p[plugin][d] && p[plugin][d]["draw"].substr(0,4) == "AREA" && g_stacked == 'false')
                     g_areafill = (p[plugin][d]["draw"].substr(4) || 4);
 
                 a = p[plugin][d]["label"] || d;
                 if("colour" in p[plugin][d]) {
-                    ca[a] = "#"+ p[plugin][d]["colour"];
+                    g_aliascolors[a] = "#"+ p[plugin][d]["colour"];
                 }
                 ta.target = "alias("+t+", '"+a+"')";
                 ds.push(JSON.parse(JSON.stringify(ta)));
