@@ -124,7 +124,7 @@ var func = function(callback) {
         var g_args = p[plugin]['graph_args'] || '';
         var g_category = p[plugin]['graph_category'] || 'misc';
         var g_period = p[plugin]['graph_period'] || 'second';
-        var g_order = p[plugin]['graph_order'].split(' ') || false;
+        var g_order = p[plugin]['graph_order'] || false;
         var g_linewidth = def_linewidth;
         var g_areafill = 1;
         var g_stacked = false;
@@ -155,6 +155,10 @@ var func = function(callback) {
 },
         */
 
+       // if there is defined specific order of metrics in graph, prepare targets in that order
+       if (g_order) {
+           g_order = g.order.split(' ');
+       }
         var datasources = g_order instanceof Array ? g_order : p[plugin];
         for (var d in datasources) {
             var ta = {};
