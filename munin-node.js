@@ -104,7 +104,7 @@ var func = function(callback) {
     var data = searchES(config, node);
     if (data.hits.total > 0) {
         // Set title of dashboard
-        dashboard.title = 'Munin node dashboard - all plugins - '+node;
+        dashboard.title = 'Munin node dashboard - '+node;
         dashboard.services.filter = {
             time: {
                 from: "now-" + timspan,
@@ -121,9 +121,10 @@ var func = function(callback) {
         var p = plugins[plugin];
         var g_title = p[plugin]['graph_title'];
         var g_info = p[plugin]['graph_info'] || '';
-        var g_args = p[plugin]['graph_info'] || '';
+        var g_args = p[plugin]['graph_args'] || '';
         var g_category = p[plugin]['graph_category'] || 'misc';
         var g_period = p[plugin]['graph_period'] || 'second';
+        var g_order = p[plugin]['graph_order'].split(' ') || false;
         var g_linewidth = def_linewidth;
         var g_areafill = 1;
         var g_stacked = false;
@@ -136,13 +137,32 @@ var func = function(callback) {
 
         // iterate through datasources and create targets as JSON struct
         ds = [];
-        for (var d in p[plugin]) {
+/*
+"proc_pri":
+{"proc_pri":
+ {
+ "graph_category": "processes",
+
+ "locked": {"info": "The number of processes that have pages locked into memory (for real-time and custom IO)", "draw": "STACK", "label": "locked in memory"},
+ "graph_order": "low high locked",
+ "high": {"info": "The number of high-priority processes (tasks)", "draw": "STACK", "label": "high priority"},
+ "graph_vlabel": "Number of processes",
+ "graph_title": "Processes priority",
+ "low": {"info": "The number of low-priority processes (tasks)", "draw": "AREA", "label": "low priority"},
+ "graph_info": "This graph shows number of processes at each priority",
+ "graph_args": "--base 1000 -l 0"
+  }
+},
+        */
+
+        var datasources = g_order instanceof Array ? g_order : p[plugin];
+        for (var d in datasources) {
             var ta = {};
 
             if (d.substr(0,6) != 'graph_') {
                 t = prefix+'.'+node+'.'+g_category+'.'+plugin+'.'+d;
                 // how to interpret datapoints
-                // TODO percentage (graph_args), colors, templates/filters, cdef (optionaly)
+                // TODO templates/filters, cdef (optionaly)
                 if ("type" in p[plugin][d] && p[plugin][d]["type"] == "DERIVE")
                     t = "derivative(" + t + ")";
                 if ("type" in p[plugin][d] && p[plugin][d]["type"] == "COUNTER")
