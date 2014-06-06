@@ -138,6 +138,7 @@ var func = function(callback) {
         // iterate through datasources and create targets as JSON struct
         ds = [];
         var tempds = {};
+        tempds.length = 0;
 
         for (var d in p[plugin]) {
             var ta = {};
@@ -168,6 +169,7 @@ var func = function(callback) {
                 ta.target = "alias("+t+", '"+a+"')";
                 //ds.push(JSON.parse(JSON.stringify(ta)));
                 tempds[d]=JSON.parse(JSON.stringify(ta));
+                tempds.length++;
             }
         }
 
@@ -183,13 +185,15 @@ var func = function(callback) {
                     ds.push(tempds[ordi]);
                 }
             }
-            // and then add the rest of metrics not mentioned in graph_order
-            for (var t in tempds) {
-                if (g_order.indexOf(t) == -1 ) {
-                    var ordi = tempds[t];
-                    ds.push(tempds[ordi]);
-                }
+        }
+        // and then add the rest of metrics not mentioned in graph_order
+        for (var t in tempds) {
+            if (g_order.indexOf(t) == -1 ) {
+                var ordi = tempds[t];
+                ds.push(tempds[ordi]);
             }
+        }
+
 }
 
         // modify units of y-axis in case there is any sign it could be of bytes or bits
