@@ -117,14 +117,14 @@ var func = function(callback) {
         var p = plugins[plugin];
         var g_title = p[plugin]['graph_title'];
         var g_category = p[plugin]['graph_category'] || 'misc';
+        var g_linewidth = 2;
+        var g_areafill = 1;
+        var g_stacked = false;
+        var g_vlabel = p[plugin]['graph_vlabel'] || '';
 
         // iterate through datasources and create targets as JSON struct
         ds = [];
         for (var d in p[plugin]) {
-            var g_linewidth = 2;
-            var g_areafill = 1;
-            var g_stacked = 'false';
-            var g_vlabel = p[plugin]['graph_vlabel'] || '';
             var ta = {};
             if (d.substr(0,6) != 'graph_') {
                 t = prefix+'.'+node+'.'+g_category+'.'+plugin+'.'+d;
@@ -137,9 +137,9 @@ var func = function(callback) {
 
                 // style of line/area
                 if ("draw" in p[plugin][d] && p[plugin][d]["draw"].substr(0,9) == "AREASTACK")
-                    g_stacked = 'true';
+                    g_stacked = true;
                 if ("draw" in p[plugin][d] && p[plugin][d]["draw"].substr(0,5) == "STACK")
-                    g_stacked = 'true';
+                    g_stacked = true;
                 if ("draw" in p[plugin][d] && p[plugin][d]["draw"].substr(0,4) == "LINE")
                     g_linewidth = (p[plugin][d]["draw"].substr(4) || g_linewidth);
                 if ("draw" in p[plugin][d] && p[plugin][d]["draw"].substr(0,4) == "AREA" && g_stacked == 'false')
