@@ -157,7 +157,7 @@ var func = function(callback) {
 
        // if there is defined specific order of metrics in graph, prepare targets in that order
        if (g_order) {
-           g_order = g.order.split(' ');
+           g_order = g_order.split(' ');
        }
         var datasources = g_order instanceof Array ? g_order : p[plugin];
         for (var d in datasources) {
