@@ -137,6 +137,7 @@ var func = function(callback) {
 
         // iterate through datasources and create targets as JSON struct
         ds = [];
+        var tempds = {};
 /*
 "proc_pri":
 {"proc_pri":
@@ -155,12 +156,7 @@ var func = function(callback) {
 },
         */
 
-       // if there is defined specific order of metrics in graph, prepare targets in that order
-       if (g_order) {
-           g_order = g_order.split(' ');
-       }
-        var datasources = g_order instanceof Array ? g_order : p[plugin];
-        for (var d in datasources) {
+        for (var d in p[plugin]) {
             var ta = {};
 
             if (d.substr(0,6) != 'graph_') {
@@ -187,7 +183,17 @@ var func = function(callback) {
                     g_aliascolors[a] = "#"+ p[plugin][d]["colour"];
                 }
                 ta.target = "alias("+t+", '"+a+"')";
-                ds.push(JSON.parse(JSON.stringify(ta)));
+                //ds.push(JSON.parse(JSON.stringify(ta)));
+                tempds[d].push(JSON.parse(JSON.stringify(ta)));
+            }
+        }
+
+        // there is
+        // if there is defined specific order of metrics in graph, prepare targets in that order
+        if (g_order) {
+            g_order = g_order.split(' ');
+            for (var ordds in g_order ) {
+                ds.push(tempds[ordds]);
             }
         }
 
