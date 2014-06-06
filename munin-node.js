@@ -116,10 +116,13 @@ var func = function(callback) {
         // get information about actual graph
         var p = plugins[plugin];
         var g_title = p[plugin]['graph_title'];
+        var g_info = p[plugin]['graph_info'] || '';
         var g_category = p[plugin]['graph_category'] || 'misc';
+        var g_period = p[plugin]['graph_period'] || 'second';
         var g_linewidth = 2;
         var g_areafill = 1;
         var g_stacked = false;
+        var g_left_y_format = "short"
         var g_vlabel = p[plugin]['graph_vlabel'] || '';
 
         // iterate through datasources and create targets as JSON struct
@@ -152,6 +155,15 @@ var func = function(callback) {
             }
         }
 
+       // modify units of y-axis in case there is notice of bytes or bits
+        if (/bytes/i.test(g_vlabel) || /bytes/i.test(g_info))
+            g_left_y_format = "bytes";
+        if (/bits/i.test(g_vlabel) || /bits/i.test(g_info))
+            g_left_y_format = "bytes";
+
+       // in case there is graph_period variable in description, do a replacement
+        g_vlabel.replace("\${graph_period}", g_period);
+
         // create rows with targets and appropriate configuration
         dashboard.rows.push({
             title: 'Chart for '+ plugin,
@@ -166,6 +178,10 @@ var func = function(callback) {
                 {
                     title: g_title,
                     leftYAxisLabel: g_vlabel,
+                    y_formats: [
+                        g_left_y_format,
+                        "short"
+                    ],
                     type: 'graphite',
                     span: 9,
                     lines: true,
@@ -175,6 +191,10 @@ var func = function(callback) {
                     pointradius: 5,
                     bars: false,
                     stack: g_stacked,
+                    tooltip: {
+                        value_type: "individual",
+                        query_as_alias: true
+                      },
                     legend: {
                         show: true,
                         values: false,
