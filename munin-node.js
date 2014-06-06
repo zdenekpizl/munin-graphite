@@ -194,7 +194,6 @@ var func = function(callback) {
             }
         }
 
-}
 
         // modify units of y-axis in case there is any sign it could be of bytes or bits
         if (/bytes/i.test(g_vlabel) || /bytes/i.test(g_info))
