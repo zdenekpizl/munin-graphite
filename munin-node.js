@@ -119,7 +119,7 @@ var func = function(callback) {
    for (var i in plugins) {
         // get information about actual graph
         var plugin_name = plugins[i]['plugin_name']
-        var plugin = plugins[i]['plugin'];
+        var plugin = plugins[i]['plugin'][plugin_name];
 
         var g_title = plugin['graph_title'] || 'Graph title not defined';
         var g_info = plugin['graph_info'] || 'Graph info not defined';
