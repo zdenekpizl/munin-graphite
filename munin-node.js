@@ -116,20 +116,22 @@ var func = function(callback) {
     var plugins = data.hits.hits[0]._source.plugins;
     var prefix = data.hits.hits[0]._source.prefix;
     var t, a, ds;
-   for (var plugin in plugins) {
+   for (var i in plugins) {
         // get information about actual graph
-        var p = plugins[plugin];
-        var g_title = p[plugin]['graph_title'];
-        var g_info = p[plugin]['graph_info'] || '';
-        var g_args = p[plugin]['graph_args'] || '';
-        var g_category = p[plugin]['graph_category'] || 'misc';
-        var g_period = p[plugin]['graph_period'] || 'second';
-        var g_order = p[plugin]['graph_order'] || false;
+        var plugin_name = plugins[i]['plugin_name']
+        var plugin = plugins[i]['plugin'];
+
+        var g_title = plugin['graph_title'] || 'Graph title not defined';
+        var g_info = plugin['graph_info'] || 'Graph info not defined';
+        var g_args = plugin['graph_args'] || '';
+        var g_category = plugin['graph_category'] || 'misc';
+        var g_period = plugin['graph_period'] || 'second';
+        var g_order = plugin['graph_order'] || false;
+        var g_vlabel = plugin['graph_vlabel'] || '';
         var g_linewidth = def_linewidth;
         var g_areafill = 1;
         var g_stacked = false;
         var g_left_y_format = "short"
-        var g_vlabel = p[plugin]['graph_vlabel'] || '';
         var g_upperlimit = null;
         var g_lowerlimit = null;
         var g_percentage = false;
@@ -140,31 +142,31 @@ var func = function(callback) {
         var tempds = {};
         tempds.length = 0;
 
-        for (var d in p[plugin]) {
+        for (var d in plugin) {
             var ta = {};
 
             if (d.substr(0,6) != 'graph_') {
-                t = prefix+'.'+node+'.'+g_category+'.'+plugin+'.'+d;
+                t = prefix+'.'+node+'.'+g_category+'.'+plugin_name+'.'+d;
                 // how to interpret datapoints
                 // TODO templates/filters, cdef (optionaly)
-                if ("type" in p[plugin][d] && p[plugin][d]["type"] == "DERIVE")
+                if ("type" in plugin[d] && plugin[d]["type"] == "DERIVE")
                     t = "derivative(" + t + ")";
-                if ("type" in p[plugin][d] && p[plugin][d]["type"] == "COUNTER")
+                if ("type" in plugin[d] && plugin[d]["type"] == "COUNTER")
                     t = "perSecond(" + t + ")";
 
                 // style of line/area
-                if ("draw" in p[plugin][d] && p[plugin][d]["draw"].substr(0,9) == "AREASTACK")
+                if ("draw" in plugin[d] && plugin[d]["draw"].substr(0,9) == "AREASTACK")
                     g_stacked = true;
-                if ("draw" in p[plugin][d] && p[plugin][d]["draw"].substr(0,5) == "STACK")
+                if ("draw" in plugin[d] && plugin[d]["draw"].substr(0,5) == "STACK")
                     g_stacked = true;
-                if ("draw" in p[plugin][d] && p[plugin][d]["draw"].substr(0,4) == "LINE")
-                    g_linewidth = (parseInt(p[plugin][d]["draw"].substr(4)) || g_linewidth);
-                if ("draw" in p[plugin][d] && p[plugin][d]["draw"].substr(0,4) == "AREA" && g_stacked == 'false')
-                    g_areafill = (p[plugin][d]["draw"].substr(4) || 4);
+                if ("draw" in plugin[d] && plugin[d]["draw"].substr(0,4) == "LINE")
+                    g_linewidth = (parseInt(plugin[d]["draw"].substr(4)) || g_linewidth);
+                if ("draw" in plugin[d] && plugin[d]["draw"].substr(0,4) == "AREA" && g_stacked == 'false')
+                    g_areafill = (plugin[d]["draw"].substr(4) || 4);
 
-                a = p[plugin][d]["label"] || d;
-                if("colour" in p[plugin][d]) {
-                    g_aliascolors[a] = "#"+ p[plugin][d]["colour"];
+                a = plugin[d]["label"] || d;
+                if("colour" in plugin[d]) {
+                    g_aliascolors[a] = "#"+ plugin[d]["colour"];
                 }
                 ta.target = "alias("+t+", '"+a+"')";
                 //ds.push(JSON.parse(JSON.stringify(ta)));
@@ -173,7 +175,7 @@ var func = function(callback) {
             }
         }
 
-        // there is
+/*
         // if there is defined specific order of metrics in graph, prepare targets in that order
         if (g_order) {
             g_order = g_order.split(/[\s]+/);
@@ -198,7 +200,7 @@ var func = function(callback) {
             }
         }
 
-
+*/
         // modify units of y-axis in case there is any sign it could be of bytes or bits
         if (/bytes/i.test(g_vlabel) || /bytes/i.test(g_info))
             g_left_y_format = "bytes";
@@ -231,7 +233,7 @@ var func = function(callback) {
                     type: 'text',
                     span: 3,
                     fill: 1,
-                    content: 'Plugin name: '+ plugin + '\n' + 'Plugin category: '+g_category
+                    content: 'Plugin name: '+ plugin_name + '\n' + 'Plugin category: '+g_category
                 },
                 {
                     title: g_title,
