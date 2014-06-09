@@ -140,7 +140,7 @@ var func = function(callback) {
         // iterate through datasources and create targets as JSON struct
         ds = [];
         var tempds = {};
-        tempds.length = 0;
+        var tempdslength = 0;
 
         for (var d in plugin) {
             var ta = {};
@@ -171,7 +171,7 @@ var func = function(callback) {
                 ta.target = "alias("+t+", '"+a+"')";
                 //ds.push(JSON.parse(JSON.stringify(ta)));
                 tempds[d]=JSON.parse(JSON.stringify(ta));
-                tempds.length++;
+                tempdslength++;
             }
         }
 
@@ -182,7 +182,7 @@ var func = function(callback) {
             // the order should be set not for all metrics within graph
             // so first add those ordered
             for (var i=0; i<g_order.length; i++) {
-                if (i< tempds.length) {
+                if (i< tempdslength) {
                     var ordi = g_order[i];
                     ds.push(tempds[ordi]);
                 }
@@ -274,7 +274,7 @@ var func = function(callback) {
                     },
                     percentage: g_percentage,
                     aliasColors: g_aliascolors,
-                    targets: ds
+                    targets: tempds
                 }]
             });
         }
