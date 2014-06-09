@@ -24,11 +24,31 @@ config.muninnode_index = 'gd-munin-node';
 config.es = 'http://poc-render01.na.getgooddata.com:9200/';
 
 
-function searchES(config, searchTerm) {
+function searchESForNodes(config, searchTerm) {
+
+    // Form up any query here
+    // '{ "fields": [ "host", "prefix" ], "query": { "regexp": { "host": ".*" }}, "sort": { "host" : "asc" }}}'
+    var esquery = '{"query": { "match": { "?????": "' + searchTerm + '"}}}';
+
+    // POST the query to ES
+    var json = jQuery.ajax({
+            url: config.es+config.muninnode_index+'/_search/',
+            type: 'POST',
+            crossDomain: true,
+            dataType: json,
+            data: esquery,
+            async: false
+        });
+
+    // You can then do anything you like with this jsonData
+    return jQuery.parseJSON(json.responseText);
+}
+
+function searchESForNodePlugins(config, searchTerm) {
 
     // TODO sort plugings by category and plugin's name
     // Form up any query here
-    var esquery = '{"query": { "match": { "host": "' + searchTerm + '"}}}';
+    var esquery = '{"query": { "regexp": { "host": "' + searchTerm + '"}}}';
 
     // POST the query to ES
     var json = jQuery.ajax({
@@ -93,15 +113,23 @@ var func = function(callback) {
     if(!_.isUndefined(ARGS.node)) {
         node = ARGS.node;
     }
+    else
+    {
+        // vybereme vsechny nody, ktery jsou v indexu, pripravime template a nastavime prvni host dle abecedy
+        var hosts = searchESForNodes(config, ".*")
+        //TODO filtering/templates
+    }
+
     if(!_.isUndefined(ARGS.from)) {
         timspan = ARGS.from;
     }
+
     if(!_.isUndefined(ARGS.line)) {
         def_linewidth = parseInt(ARGS.line);
     }
 
     // searchES() should return just 1 result with a node or empty set
-    var data = searchES(config, node);
+    var data = searchESForNodePlugins(config, node);
     if (data.hits.total > 0) {
         // Set title of dashboard
         dashboard.title = 'Munin node dashboard - '+node;
@@ -129,7 +157,7 @@ var func = function(callback) {
         var g_order = plugin['graph_order'] || false;
         var g_vlabel = plugin['graph_vlabel'] || '';
         var g_linewidth = def_linewidth;
-        var g_areafill = 1;
+        var g_areafill = 2;
         var g_stacked = false;
         var g_left_y_format = "short"
         var g_upperlimit = null;
@@ -149,7 +177,6 @@ var func = function(callback) {
             if (d.substr(0,6) != 'graph_') {
                 t = prefix+'.'+node+'.'+g_category+'.'+plugin_name+'.'+d;
                 // how to interpret datapoints
-                // TODO templates/filters, cdef (optionaly)
                 if ("type" in plugin[d] && plugin[d]["type"] == "DERIVE")
                     t = "derivative(" + t + ")";
                 if ("type" in plugin[d] && plugin[d]["type"] == "COUNTER")
@@ -226,7 +253,7 @@ var func = function(callback) {
 
         // create rows with targets and appropriate configuration
         dashboard.rows.push({
-            title: 'Chart for '+ plugin,
+            title: 'Chart for '+ plugin_name,
             height: '250px',
             panels: [{
                     title: 'Plugin information',
