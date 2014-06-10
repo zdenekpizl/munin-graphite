@@ -49,7 +49,7 @@ function searchESForNodePlugins(config, searchTerm) {
 
     // TODO sort plugings by category and plugin's name
     // Form up any query here
-    var esquery = '{"query": { "regexp": { "host": "' + searchTerm + '"}}}';
+    var esquery = '{"query": { "match": { "host": "' + searchTerm + '"}}}';
 
     // POST the query to ES
     var json = jQuery.ajax({
@@ -146,8 +146,8 @@ var func = function(callback) {
 
     // here we've got plugins of matched node
     var plugins_temp = data.hits.hits[0]._source.plugins;
-    var plugins = {};
-    for (var ip in plugins_temp)
+    var plugins = [];
+    for (var pi in plugins_temp)
     {
         // we have got some multigraphs, lets put multigraph plugins directly to the plugins array
         if (plugins_temp[pi]['plugin']['ismultigraph'] == 1)
@@ -155,12 +155,20 @@ var func = function(callback) {
             for (var mi in plugins_temp[pi]['plugin'])
             {
                 var multiplugin = plugins_temp[pi]['plugin'][mi];
-                if ("graph_title" in multiplugin)
+                if (multiplugin instanceof Object && "graph_title" in multiplugin)
                 {
-                    // it is valid plugin not only a wrapper, so move it
-                    continue
+                    // it is valid plugin not only a wrapper, so move on and copy it to plugins result array
+                    var xxx = {'plugin_name': mi, 'plugin': {'ismultigraph': 1}}
+                    xxx['plugin'][mi] = multiplugin;
+                    xxx['multigraphpath'] = plugins_temp[pi]['plugin_name']
+                    plugins.push(xxx);
                 }
             }
+        }
+        else
+        {
+            // simple graph, just copy it over to plugins result array
+            plugins.push(plugins_temp[pi]);
         }
     }
     var prefix = data.hits.hits[0]._source.prefix;
@@ -196,7 +204,14 @@ var func = function(callback) {
             var ta = {};
 
             if (d.substr(0,6) != 'graph_') {
-                t = prefix+'.'+node+'.'+g_category+'.'+plugin_name+'.'+d;
+                if ("ismultigraph" in plugins[i]['plugin'] && plugins[i]['plugin']['ismultigraph'] == 1)
+                {
+                    t = prefix+'.'+node+'.'+g_category+'.'+plugins[i]['multigraphpath']+'.'+plugin_name+'.'+d;
+                }
+                else
+                {
+                    t = prefix+'.'+node+'.'+g_category+'.'+plugin_name+'.'+d;
+                }
                 // how to interpret datapoints
                 // TODO templates/filters, cdef (optionaly)
                 if ("type" in plugin[d] && plugin[d]["type"] == "DERIVE")
