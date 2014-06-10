@@ -113,7 +113,24 @@ var func = function(callback) {
         };
 
     // here we've got plugins of matched node
-    var plugins = data.hits.hits[0]._source.plugins;
+    var plugins_temp = data.hits.hits[0]._source.plugins;
+    var plugins = {};
+    for (var ip in plugins_temp)
+    {
+        // we have got some multigraphs, lets put multigraph plugins directly to the plugins array
+        if (plugins_temp[pi]['plugin']['ismultigraph'] == 1)
+        {
+            for (var mi in plugins_temp[pi]['plugin'])
+            {
+                var multiplugin = plugins_temp[pi]['plugin'][mi];
+                if ("graph_title" in multiplugin)
+                {
+                    // it is valid plugin not only a wrapper, so move it
+                    continue
+                }
+            }
+        }
+    }
     var prefix = data.hits.hits[0]._source.prefix;
     var t, a, ds;
    for (var i in plugins) {

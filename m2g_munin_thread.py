@@ -194,6 +194,7 @@ class Munin():
         """Get config values for Munin plugin."""
         self._sock.sendall("config %s\n" % plugin)
         response = {plugin: {}}
+        ismultigraph = 0
         multigraph = plugin
 
         for current_line in self._iterline():
@@ -203,6 +204,7 @@ class Munin():
         
             if current_line.startswith("multigraph "):
                 multigraph = current_line[11:]
+                ismultigraph = 1
                 response[multigraph] = {}
                 continue
 
@@ -227,6 +229,7 @@ class Munin():
 
 #            print "Response final: %r\n" %response
 
+        response['ismultigraph'] = ismultigraph
         return response
 
     def process_host_stats(self):
