@@ -24,11 +24,32 @@ config.muninnode_index = 'gd-munin-node';
 config.es = 'http://poc-render01.na.getgooddata.com:9200/';
 
 
-function searchES(config, searchTerm) {
+function searchESForNodes(config, searchTerm) {
 
     // TODO sort plugings by category and plugin's name
     // Form up any query here
-    var esquery = '{"query": { "match": { "host": "' + searchTerm + '"}}}';
+    // '{ "fields": [ "host", "prefix" ], "query": { "regexp": { "host": ".*" }}, "sort": { "host" : "asc" }}}'
+    var esquery = '{"query": { "match": { "?????": "' + searchTerm + '"}}}';
+
+    // POST the query to ES
+    var json = jQuery.ajax({
+            url: config.es+config.muninnode_index+'/_search/',
+            type: 'POST',
+            crossDomain: true,
+            dataType: json,
+            data: esquery,
+            async: false
+        });
+
+    // You can then do anything you like with this jsonData
+    return jQuery.parseJSON(json.responseText);
+}
+
+function searchESForNodePlugins(config, searchTerm) {
+
+    // TODO sort plugings by category and plugin's name
+    // Form up any query here
+    var esquery = '{"query": { "regexp": { "host": "' + searchTerm + '"}}}';
 
     // POST the query to ES
     var json = jQuery.ajax({
@@ -93,6 +114,13 @@ var func = function(callback) {
     if(!_.isUndefined(ARGS.node)) {
         node = ARGS.node;
     }
+    else
+    {
+        // vybereme vsechny nody, ktery jsou v indexu, pripravime template a nastavime prvni host dle abecedy
+        var hosts = searchESForNodes(config, ".*")
+        //TODO filtering/templates
+    }
+
     if(!_.isUndefined(ARGS.from)) {
         timspan = ARGS.from;
     }
@@ -100,8 +128,12 @@ var func = function(callback) {
         def_linewidth = parseInt(ARGS.line);
     }
 
+    if(!_.isUndefined(ARGS.line)) {
+        def_linewidth = parseInt(ARGS.line);
+    }
+
     // searchES() should return just 1 result with a node or empty set
-    var data = searchES(config, node);
+    var data = searchESForNodePlugins(config, node);
     if (data.hits.total > 0) {
         // Set title of dashboard
         dashboard.title = 'Munin node dashboard - '+node;
@@ -146,7 +178,7 @@ var func = function(callback) {
         var g_order = plugin['graph_order'] || false;
         var g_vlabel = plugin['graph_vlabel'] || '';
         var g_linewidth = def_linewidth;
-        var g_areafill = 1;
+        var g_areafill = 2;
         var g_stacked = false;
         var g_left_y_format = "short"
         var g_upperlimit = null;
@@ -159,6 +191,7 @@ var func = function(callback) {
         var tempds = {};
         var tempdslength = 0;
 
+       // browse through all datasources
         for (var d in plugin) {
             var ta = {};
 
@@ -191,33 +224,36 @@ var func = function(callback) {
                 tempdslength++;
             }
         }
+        foo = g_args.match("(--lower-limit|-l) ([0123456789]+)");
+        if( foo instanceof Array ) {
+            g_lowerlimit = foo[2];
+        }
 
-/*
         // if there is defined specific order of metrics in graph, prepare targets in that order
         if (g_order) {
             g_order = g_order.split(/[\s]+/);
             // the order should be set not for all metrics within graph
             // so first add those ordered
-            for (var i=0; i<g_order.length; i++) {
-                if (i< tempdslength) {
-                    var ordi = g_order[i];
+            for (var oi=0; oi<g_order.length; oi++) {
+                if (oi< tempdslength) {
+                    var ordi = g_order[oi];
                     ds.push(tempds[ordi]);
                 }
             }
+            // and then add the rest of metrics not mentioned in graph_order
+            // browse through all datasources again and add those not already in
+            for (var tds in tempds) {
+                if (g_order && g_order.indexOf(tds) == -1 ) {
+                    ds.push(tempds[tds]);
+                }
+            }
         }
-        // and then add the rest of metrics not mentioned in graph_order
-        for (var tds in tempds) {
-            if (g_order && g_order.indexOf(tds) == -1 ) {
-                var ordi = tempds[tds];
-                ds.push(tempds[ordi]);
-            }
-            else
-            {
-              ds = JSON.parse(JSON.stringify(tempds));
-            }
+        else
+        {
+          ds = JSON.parse(JSON.stringify(tempds));
         }
 
-*/
+
         // modify units of y-axis in case there is any sign it could be of bytes or bits
         if (/bytes/i.test(g_vlabel) || /bytes/i.test(g_info))
             g_left_y_format = "bytes";
@@ -243,7 +279,7 @@ var func = function(callback) {
 
         // create rows with targets and appropriate configuration
         dashboard.rows.push({
-            title: 'Chart for '+ plugin,
+            title: 'Chart for '+ plugin_name,
             height: '250px',
             panels: [{
                     title: 'Plugin information',
@@ -291,7 +327,7 @@ var func = function(callback) {
                     },
                     percentage: g_percentage,
                     aliasColors: g_aliascolors,
-                    targets: tempds
+                    targets: ds
                 }]
             });
         }
