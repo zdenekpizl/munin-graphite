@@ -194,6 +194,7 @@ var func = function(callback) {
     var prefix = data.hits.hits[0]._source.prefix;
     var t, a, ds;
     var category = '';
+    var cat_navigation = "";
     for (var i in plugins) {
         // get information about actual graph
         var plugin_name = plugins[i]['plugin_name']
@@ -317,6 +318,8 @@ var func = function(callback) {
         if ( category != g_category ) {
             category = g_category;
 
+            cat_navigation = cat_navigation + "<a href='#"+category+"'>"+category+"</a> ";
+
             dashboard.rows.push({
               title: "Category "+category+" row",
               height: "50px",
@@ -331,7 +334,7 @@ var func = function(callback) {
                   type: "text",
                   loadingEditor: false,
                   mode: "html",
-                  content: "<a style='text-decoration: none' name='#"+category+"'>" +
+                  content: "<a style='text-decoration: none' name='"+category+"'>" +
                       "<div style='background-color: white; " +
                       "color:cornflowerblue; text-align: center; font-size: 20px; " +
                       "border: 2px; text-transform: uppercase;' >"+category+"</div>" +
@@ -399,6 +402,30 @@ var func = function(callback) {
                 }]
             });
         }
+
+        dashboard.rows.unshift({
+          title: "Category navigation row",
+          height: "100px",
+          editable: false,
+          collapse: false,
+          collapsable: false,
+          panels: [
+            {
+              error: false,
+              span: 12,
+              editable: true,
+              type: "text",
+              loadingEditor: false,
+              mode: "html",
+              content: "<div style='background-color: white; " +
+                  "color:cornflowerblue; text-align: center; font-size: 10px; " +
+                  "border: 2px;' >"+cat_navigation+"</div>",
+              style: {},
+              title: "List of categories"
+            }
+          ],
+          notice: false
+        });
 
        callback(dashboard);
     }
