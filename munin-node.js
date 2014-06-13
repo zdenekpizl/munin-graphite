@@ -22,14 +22,14 @@ var window, document, ARGS, $, jQuery, moment, kbn;
 var config = [];
 config.muninnode_index = 'gd-munin-node';
 config.es = 'http://poc-render01.na.getgooddata.com:9200/';
+config.prefix = 'munin.';
 
 
 function searchESForNodes(config, searchTerm) {
 
-    // TODO sort plugings by category and plugin's name
     // Form up any query here
     // '{ "fields": [ "host", "prefix" ], "query": { "regexp": { "host": ".*" }}, "sort": { "host" : "asc" }}}'
-    var esquery = '{"query": { "match": { "?????": "' + searchTerm + '"}}}';
+    var esquery = '{"fields": [ "host", "prefix" ], "query": { "regexp": { "host": "' + searchTerm + '", "prefix": "'+config.prefix+'"}}}';
 
     // POST the query to ES
     var json = jQuery.ajax({
@@ -47,7 +47,6 @@ function searchESForNodes(config, searchTerm) {
 
 function searchESForNodePlugins(config, searchTerm) {
 
-    // TODO sort plugings by category and plugin's name
     // Form up any query here
     var esquery = '{"query": { "match": { "host": "' + searchTerm + '"}}}';
 
@@ -65,21 +64,20 @@ function searchESForNodePlugins(config, searchTerm) {
     return jQuery.parseJSON(json.responseText);
 }
 
+// function used by sort of plugins
 function comparePluginsCategory(a, b) {
-/*
-        // get information about actual graph
-        var plugin_name = plugins[i]['plugin_name']
-        var plugin = plugins[i]['plugin'][plugin_name];
-
-        var g_category = plugin['graph_category'] || 'misc';
-
- */
     var plugin_name_a = a['plugin_name']
     var plugin_name_b = b['plugin_name']
-    var plugin_a_category = a['plugin'][plugin_name_a]['graph_category'];
-    var plugin_b_category = a['plugin'][plugin_name_b]['graph_category'];
+    var plugin_a_category = a['plugin'][plugin_name_a]['graph_category']+plugin_name_a;
+    var plugin_b_category = b['plugin'][plugin_name_b]['graph_category']+plugin_name_b;
+    var result = 0;
+    
+    if (plugin_a_category < plugin_b_category)
+         result = -1;
+    if (plugin_a_category > plugin_b_category)
+        result = 1;
 
-    return plugin_a_category < plugin_b_category;
+    return result;
 }
 
 var func = function(callback) {
@@ -133,9 +131,21 @@ var func = function(callback) {
     }
     else
     {
-        // vybereme vsechny nody, ktery jsou v indexu, pripravime template a nastavime prvni host dle abecedy
+        // search for all nodes stored in index, prepare filtering template
         var hosts = searchESForNodes(config, ".*")
         //TODO filtering/templates
+        dashboard.services.filter.list = {
+            type: "filter",
+            name: "node",
+            query: config.prefix+".*",
+            options: []
+        }
+
+        // populate nodes into list
+        for (var fnode in hosts.hits.hits) {
+            var node_host = fnode.fields.host;
+            dashboard.services.filter.list.options.push({text: node_host, value: node_host})
+        }
     }
 
     if(!_.isUndefined(ARGS.from)) {
@@ -190,10 +200,12 @@ var func = function(callback) {
     }
 
     // we would like to have plugins sorted by graph category to be able to group them visually
-    plugins = sort(plugins, comparePluginsCategory(pa, pb) );
+    plugins = plugins.sort(comparePluginsCategory);
 
     var prefix = data.hits.hits[0]._source.prefix;
     var t, a, ds;
+    var category = '';
+    var cat_navigation = "";
     for (var i in plugins) {
         // get information about actual graph
         var plugin_name = plugins[i]['plugin_name']
@@ -234,7 +246,6 @@ var func = function(callback) {
                     t = prefix+'.'+node+'.'+g_category+'.'+plugin_name+'.'+d;
                 }
                 // how to interpret datapoints
-                // TODO templates/filters, cdef (optionaly)
                 if ("type" in plugin[d] && plugin[d]["type"] == "DERIVE")
                     t = "derivative(" + t + ")";
                 if ("type" in plugin[d] && plugin[d]["type"] == "COUNTER")
@@ -255,7 +266,6 @@ var func = function(callback) {
                     g_aliascolors[a] = "#"+ plugin[d]["colour"];
                 }
                 ta.target = "alias("+t+", '"+a+"')";
-                //ds.push(JSON.parse(JSON.stringify(ta)));
                 tempds[d]=JSON.parse(JSON.stringify(ta));
                 tempdslength++;
             }
@@ -286,15 +296,16 @@ var func = function(callback) {
         }
         else
         {
-          ds = JSON.parse(JSON.stringify(tempds));
+            // there is no explicit order of datasources, just copy it over
+            ds = JSON.parse(JSON.stringify(tempds));
+            g_order = "Not specified";
         }
-
 
         // modify units of y-axis in case there is any sign it could be of bytes or bits
         if (/bytes/i.test(g_vlabel) || /bytes/i.test(g_info))
             g_left_y_format = "bytes";
         if (/bits/i.test(g_vlabel) || /bits/i.test(g_info))
-            g_left_y_format = "bytes";
+            g_left_y_format = "bits";
 
         // in case there is graph_period variable in description, do a replacement
         g_vlabel = g_vlabel.replace("\${graph_period}", g_period);
@@ -308,10 +319,53 @@ var func = function(callback) {
                 g_percentage = true;
             }
         }
+        // upper limit
         foo = g_args.match("(--lower-limit|-l) ([0123456789]+)");
         if( foo instanceof Array ) {
             g_lowerlimit = foo[2];
         }
+
+        // new category, let's create a visual panel for it
+        if ( category != g_category ) {
+            category = g_category;
+
+            cat_navigation = cat_navigation + "<a href='#"+category+"'>"+category+"</a> ";
+
+            dashboard.rows.push({
+              title: "Category "+category+" row",
+              height: "50px",
+              editable: false,
+              collapse: false,
+              collapsable: false,
+              panels: [
+                {
+                  error: false,
+                  span: 12,
+                  editable: true,
+                  type: "text",
+                  loadingEditor: false,
+                  mode: "html",
+                  content: "<a style='text-decoration: none' name='"+category+"'></a>" +
+                      "<div style='background-color: white; " +
+                      "color:cornflowerblue; text-align: center; font-size: 14px; " +
+                      "border: 2px; text-transform: uppercase;' >"+category+"</div>",
+                  style: {},
+                  title: " "
+                }
+              ],
+              notice: false
+            });
+
+        }
+
+        // prepare HTML snippet with plugin's information
+        var plugin_information='<div><ul style="list-style:none; padding-left: 2px;">' +
+            '<li><strong>Name</strong>:' + plugin_name + '</li>' +
+            '<li><strong>Info</strong>:' + plugin_information + '</li>' +
+            '<li><strong>Stacked</strong>:' + g_order + '</li>' +
+            '<li><strong>Order of metrics</strong>:' + g_order + '</li>' +
+            '<li><strong>Colours of metrics</strong>' + g_aliascolors.length > 0? "Colours specified":"Colour not specified" + '</li>' +
+            '</ul></div>';
 
         // create rows with targets and appropriate configuration
         dashboard.rows.push({
@@ -322,7 +376,8 @@ var func = function(callback) {
                     type: 'text',
                     span: 3,
                     fill: 1,
-                    content: 'Plugin name: '+ plugin_name + '\n' + 'Plugin category: '+g_category
+                    mode: "html",
+                    content: plugin_information
                 },
                 {
                     title: g_title,
@@ -367,6 +422,32 @@ var func = function(callback) {
                 }]
             });
         }
+/*
+        // prepend navigation
+        dashboard.rows.unshift({
+          title: "Category navigation row",
+          height: "100px",
+          editable: false,
+          collapse: false,
+          collapsable: false,
+          panels: [
+            {
+              error: false,
+              span: 12,
+              editable: true,
+              type: "text",
+              loadingEditor: false,
+              mode: "html",
+              content: "<div style='background-color: white; " +
+                  "color:cornflowerblue; text-align: center; font-size: 10px; " +
+                  "border: 2px;' >"+cat_navigation+"</div>",
+              style: {},
+              title: "List of categories"
+            }
+          ],
+          notice: false
+        });
+*/
 
        callback(dashboard);
     }
