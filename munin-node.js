@@ -313,12 +313,13 @@ var func = function(callback) {
             g_lowerlimit = foo[2];
         }
 
+        // wow, new category, let's create a visual
         if ( category != g_category ) {
             category = g_category;
 
             dashboard.rows.push({
               title: "Category "+category+" row",
-              height: "30px",
+              height: "50px",
               editable: false,
               collapse: false,
               collapsable: false,
@@ -329,10 +330,10 @@ var func = function(callback) {
                   editable: true,
                   type: "text",
                   loadingEditor: false,
-                  mode: "markdown",
-                  content: "",
+                  mode: "html",
+                  content: "<div style='background-color: white; color:cornflowerblue; text-align: center; font-size: 20px; border: 2px; border-color: aliceblue'>"+category+"</div>",
                   style: {},
-                  title: category
+                  title: ""
                 }
               ],
               notice: false
