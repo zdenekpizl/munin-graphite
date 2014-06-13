@@ -65,21 +65,20 @@ function searchESForNodePlugins(config, searchTerm) {
     return jQuery.parseJSON(json.responseText);
 }
 
+// function used by sort of plugins
 function comparePluginsCategory(a, b) {
-/*
-        // get information about actual graph
-        var plugin_name = plugins[i]['plugin_name']
-        var plugin = plugins[i]['plugin'][plugin_name];
-
-        var g_category = plugin['graph_category'] || 'misc';
-
- */
     var plugin_name_a = a['plugin_name']
     var plugin_name_b = b['plugin_name']
     var plugin_a_category = a['plugin'][plugin_name_a]['graph_category'];
-    var plugin_b_category = a['plugin'][plugin_name_b]['graph_category'];
+    var plugin_b_category = b['plugin'][plugin_name_b]['graph_category'];
 
-    return plugin_a_category < plugin_b_category;
+    var result = 0;
+    if (plugin_a_category < plugin_b_category)
+         result = -1;
+    if (plugin_a_category < plugin_b_category)
+        result = 1;
+
+    return result;
 }
 
 var func = function(callback) {
@@ -190,7 +189,7 @@ var func = function(callback) {
     }
 
     // we would like to have plugins sorted by graph category to be able to group them visually
-    plugins = sort(plugins, comparePluginsCategory(pa, pb) );
+    plugins = plugins.sort(comparePluginsCategory);
 
     var prefix = data.hits.hits[0]._source.prefix;
     var t, a, ds;
