@@ -331,9 +331,13 @@ var func = function(callback) {
                   type: "text",
                   loadingEditor: false,
                   mode: "html",
-                  content: "<div style='background-color: white; color:cornflowerblue; text-align: center; font-size: 20px; border: 2px; border-color: aliceblue'>"+category+"</div>",
+                  content: "<a style='text-decoration: none' name='#"+category+"'>" +
+                      "<div style='background-color: white; " +
+                      "color:cornflowerblue; text-align: center; font-size: 20px; " +
+                      "border: 2px; text-transform: uppercase;' >"+category+"</div>" +
+                      "</a>",
                   style: {},
-                  title: ""
+                  title: " "
                 }
               ],
               notice: false
