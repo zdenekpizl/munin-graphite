@@ -75,7 +75,7 @@ function comparePluginsCategory(a, b) {
     var result = 0;
     if (plugin_a_category < plugin_b_category)
          result = -1;
-    if (plugin_a_category < plugin_b_category)
+    if (plugin_a_category > plugin_b_category)
         result = 1;
 
     return result;
@@ -193,6 +193,7 @@ var func = function(callback) {
 
     var prefix = data.hits.hits[0]._source.prefix;
     var t, a, ds;
+    var category = '';
     for (var i in plugins) {
         // get information about actual graph
         var plugin_name = plugins[i]['plugin_name']
@@ -310,6 +311,33 @@ var func = function(callback) {
         foo = g_args.match("(--lower-limit|-l) ([0123456789]+)");
         if( foo instanceof Array ) {
             g_lowerlimit = foo[2];
+        }
+
+        if ( category != g_category ) {
+            category = g_category;
+
+            dashboard.rows.push({
+              title: "Category "+category+" row",
+              height: "30px",
+              editable: false,
+              collapse: false,
+              collapsable: false,
+              panels: [
+                {
+                  error: false,
+                  span: 12,
+                  editable: true,
+                  type: "text",
+                  loadingEditor: false,
+                  mode: "markdown",
+                  content: "",
+                  style: {},
+                  title: category
+                }
+              ],
+              notice: false
+            });
+
         }
 
         // create rows with targets and appropriate configuration
