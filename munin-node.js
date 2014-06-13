@@ -65,6 +65,23 @@ function searchESForNodePlugins(config, searchTerm) {
     return jQuery.parseJSON(json.responseText);
 }
 
+function comparePluginsCategory(a, b) {
+/*
+        // get information about actual graph
+        var plugin_name = plugins[i]['plugin_name']
+        var plugin = plugins[i]['plugin'][plugin_name];
+
+        var g_category = plugin['graph_category'] || 'misc';
+
+ */
+    var plugin_name_a = a['plugin_name']
+    var plugin_name_b = b['plugin_name']
+    var plugin_a_category = a['plugin'][plugin_name_a]['graph_category'];
+    var plugin_b_category = a['plugin'][plugin_name_b]['graph_category'];
+
+    return plugin_a_category < plugin_b_category;
+}
+
 var func = function(callback) {
 
     // Setup variables
@@ -149,7 +166,7 @@ var func = function(callback) {
     var plugins = [];
     for (var pi in plugins_temp)
     {
-        // we have got some multigraphs, lets put multigraph plugins directly to the plugins array
+        // we have got some (nested) multigraphs, lets put multigraph plugins directly to the plugins array
         if (plugins_temp[pi]['plugin']['ismultigraph'] == 1)
         {
             for (var mi in plugins_temp[pi]['plugin'])
@@ -171,9 +188,13 @@ var func = function(callback) {
             plugins.push(plugins_temp[pi]);
         }
     }
+
+    // we would like to have plugins sorted by graph category to be able to group them visually
+    plugins = sort(plugins, comparePluginsCategory(pa, pb) );
+
     var prefix = data.hits.hits[0]._source.prefix;
     var t, a, ds;
-   for (var i in plugins) {
+    for (var i in plugins) {
         // get information about actual graph
         var plugin_name = plugins[i]['plugin_name']
         var plugin = plugins[i]['plugin'][plugin_name];
