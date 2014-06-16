@@ -68,10 +68,10 @@ function searchESForNodePlugins(config, searchTerm) {
 function comparePluginsCategory(a, b) {
     var plugin_name_a = a['plugin_name']
     var plugin_name_b = b['plugin_name']
-    var plugin_a_category = a['plugin'][plugin_name_a]['graph_category'];
-    var plugin_b_category = b['plugin'][plugin_name_b]['graph_category'];
-
+    var plugin_a_category = a['plugin'][plugin_name_a]['graph_category']+plugin_name_a;
+    var plugin_b_category = b['plugin'][plugin_name_b]['graph_category']+plugin_name_b;
     var result = 0;
+    
     if (plugin_a_category < plugin_b_category)
          result = -1;
     if (plugin_a_category > plugin_b_category)
@@ -212,7 +212,7 @@ var func = function(callback) {
         var plugin = plugins[i]['plugin'][plugin_name];
 
         var g_title = plugin['graph_title'] || 'Graph title not defined';
-        var g_info = plugin['graph_info'] || 'Graph info not defined';
+        var g_info = plugin['graph_info'] || 'Graph info not supplied by plugin';
         var g_args = plugin['graph_args'] || '';
         var g_category = plugin['graph_category'] || 'misc';
         var g_period = plugin['graph_period'] || 'second';
@@ -246,7 +246,6 @@ var func = function(callback) {
                     t = prefix+'.'+node+'.'+g_category+'.'+plugin_name+'.'+d;
                 }
                 // how to interpret datapoints
-                // TODO templates/filters, cdef (optionaly)
                 if ("type" in plugin[d] && plugin[d]["type"] == "DERIVE")
                     t = "derivative(" + t + ")";
                 if ("type" in plugin[d] && plugin[d]["type"] == "COUNTER")
@@ -267,7 +266,6 @@ var func = function(callback) {
                     g_aliascolors[a] = "#"+ plugin[d]["colour"];
                 }
                 ta.target = "alias("+t+", '"+a+"')";
-                //ds.push(JSON.parse(JSON.stringify(ta)));
                 tempds[d]=JSON.parse(JSON.stringify(ta));
                 tempdslength++;
             }
@@ -298,15 +296,16 @@ var func = function(callback) {
         }
         else
         {
-          ds = JSON.parse(JSON.stringify(tempds));
+            // there is no explicit order of datasources, just copy it over
+            ds = JSON.parse(JSON.stringify(tempds));
+            g_order = "Not specified";
         }
-
 
         // modify units of y-axis in case there is any sign it could be of bytes or bits
         if (/bytes/i.test(g_vlabel) || /bytes/i.test(g_info))
             g_left_y_format = "bytes";
         if (/bits/i.test(g_vlabel) || /bits/i.test(g_info))
-            g_left_y_format = "bytes";
+            g_left_y_format = "bits";
 
         // in case there is graph_period variable in description, do a replacement
         g_vlabel = g_vlabel.replace("\${graph_period}", g_period);
@@ -320,6 +319,7 @@ var func = function(callback) {
                 g_percentage = true;
             }
         }
+        // upper limit
         foo = g_args.match("(--lower-limit|-l) ([0123456789]+)");
         if( foo instanceof Array ) {
             g_lowerlimit = foo[2];
@@ -358,6 +358,14 @@ var func = function(callback) {
 
         }
 
+        // prepare HTML snippet with plugin's information
+        var plugin_information;
+        plugin_information = '<div><ul style="list-style:none; padding-left: 0px; padding-bottom: 2px;">';
+        plugin_information += '<li><strong>Name</strong>:' + plugin_name + '</li>';
+        plugin_information += '<li><strong>Info</strong>:' + g_info + '</li>';
+        plugin_information += '<li><strong>Stacked</strong>:' + g_stacked?"Graph is stacked":"Graph is not stacked" + '</li>';
+        plugin_information += '</ul></div>';
+
         // create rows with targets and appropriate configuration
         dashboard.rows.push({
             title: 'Chart for '+ plugin_name,
@@ -367,7 +375,8 @@ var func = function(callback) {
                     type: 'text',
                     span: 3,
                     fill: 1,
-                    content: 'Plugin name: '+ plugin_name + '\n' + 'Plugin category: '+g_category
+                    mode: "html",
+                    content: plugin_information
                 },
                 {
                     title: g_title,
