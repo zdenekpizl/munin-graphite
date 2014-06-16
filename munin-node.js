@@ -234,7 +234,7 @@ var func = function(callback) {
         var tempdslength = 0;
 
         if (g_info.localeCompare('') == 0) {
-            g_info = 'Graph title not defined';
+            g_info = 'Graph info not defined';
         }
         else {
             g_infofound = true;
