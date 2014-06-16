@@ -211,9 +211,9 @@ var func = function(callback) {
         var plugin_name = plugins[i]['plugin_name']
         var plugin = plugins[i]['plugin'][plugin_name];
 
-        var g_title = plugin['graph_title'] || '';
+        var g_title = plugin['graph_title'] || 'Graph title not defined by plugin';
         var g_infofound = false;
-        var g_info = plugin['graph_info'] || 'Graph info not supplied by plugin';
+        var g_info = plugin['graph_info'] || '';
         var g_args = plugin['graph_args'] || '';
         var g_category = plugin['graph_category'] || 'misc';
         var g_period = plugin['graph_period'] || 'second';
