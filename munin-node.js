@@ -461,18 +461,19 @@ var func = function(callback) {
     else
     {
         // search for all nodes stored in index, prepare filtering template
-        var hosts = searchESForNodes(config, ".*")
-        dashboard.title = 'Munin nodes list';
+        var hosts = searchESForNodes(config, ".*");
 
         // populate nodes into list
-        var nodes_list = "<ul>"
+        var nodes_list = "<ul>";
         for (var fnode in hosts.hits.hits) {
             var node_host = fnode.fields.host;
             nodes_list += "<li>"+node_host+"</li>";
         }
         nodes_list += "</ul>";
+
+        dashboard.title = 'Munin nodes list';
         dashboard.rows.push({
-            title: 'Node '+node+' not found.',
+            title: 'List of configured nodes',
             height: '300px',
             panels: [{
                 title: 'List of configured nodes',
