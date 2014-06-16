@@ -233,7 +233,7 @@ var func = function(callback) {
         var tempds = {};
         var tempdslength = 0;
 
-        if (g_info == '') {
+        if (g_info.localeCompare('') == 0) {
             g_info = 'Graph title not defined';
         }
         else {
@@ -391,7 +391,7 @@ var func = function(callback) {
             panels: [{
                     title: 'Plugin information',
                     type: 'text',
-                    span: 3,
+                    span: 4,
                     fill: 1,
                     mode: "html",
                     content: plugin_information
@@ -404,7 +404,7 @@ var func = function(callback) {
                         "short"
                     ],
                     type: 'graphite',
-                    span: 9,
+                    span: 8,
                     lines: true,
                     fill: g_areafill,
                     linewidth: g_linewidth,
