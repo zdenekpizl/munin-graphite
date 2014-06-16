@@ -307,7 +307,7 @@ var func = function(callback) {
                 var foo = g_args.match("(--upper-limit|-u) ([0123456789]+)");
                 if( foo instanceof Array ) {
                     g_upperlimit = foo[2];
-                    if (parseInt(foo[2]) == 100 and g_stacked) {
+                    if (parseInt(foo[2]) == 100 && g_stacked) {
                         g_percentage = true;
                     }
                 }
@@ -412,32 +412,6 @@ var func = function(callback) {
                         }]
                     });
             }
-            /*
-            // prepend navigation
-            dashboard.rows.unshift({
-              title: "Category navigation row",
-              height: "100px",
-              editable: false,
-              collapse: false,
-              collapsable: false,
-              panels: [
-                {
-                  error: false,
-                  span: 12,
-                  editable: true,
-                  type: "text",
-                  loadingEditor: false,
-                  mode: "html",
-                  content: "<div style='background-color: white; " +
-                      "color:cornflowerblue; text-align: center; font-size: 10px; " +
-                      "border: 2px;' >"+cat_navigation+"</div>",
-                  style: {},
-                  title: "List of categories"
-                }
-              ],
-              notice: false
-            });
-            */
 
            callback(dashboard);
         }
@@ -458,8 +432,7 @@ var func = function(callback) {
             callback(dashboard);
       }
     }
-    else
-    {
+    else {
         // search for all nodes stored in index, prepare filtering template
         var hosts = searchESForNodes(config, ".*");
 
