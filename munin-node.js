@@ -211,7 +211,8 @@ var func = function(callback) {
         var plugin_name = plugins[i]['plugin_name']
         var plugin = plugins[i]['plugin'][plugin_name];
 
-        var g_title = plugin['graph_title'] || 'Graph title not defined';
+        var g_title = plugin['graph_title'] || '';
+        var g_infofound = false;
         var g_info = plugin['graph_info'] || 'Graph info not supplied by plugin';
         var g_args = plugin['graph_args'] || '';
         var g_category = plugin['graph_category'] || 'misc';
@@ -232,7 +233,13 @@ var func = function(callback) {
         var tempds = {};
         var tempdslength = 0;
 
-       // browse through all datasources
+        if (g_info == '') {
+            g_info = 'Graph title not defined';
+        }
+        else {
+            g_infofound = true;
+        }
+        // browse through all datasources
         for (var d in plugin) {
             var ta = {};
 
@@ -260,6 +267,17 @@ var func = function(callback) {
                     g_linewidth = (parseInt(plugin[d]["draw"].substr(4)) || g_linewidth);
                 if ("draw" in plugin[d] && plugin[d]["draw"].substr(0,4) == "AREA" && g_stacked == 'false')
                     g_areafill = (plugin[d]["draw"].substr(4) || 4);
+
+                // append information about datasource if any
+                if("info" in plugin[d]) {
+                    if (g_infofound) {
+                        g_info += "<br/><u>" + d + "</u> - " + plugin[d]["info"] + ".";
+                    }
+                    else {
+                        g_info = "<u>" + d + "</u> - " + plugin[d]["info"] + ".";
+                        g_infofound = true;
+                    }
+                }
 
                 a = plugin[d]["label"] || d;
                 if("colour" in plugin[d]) {
