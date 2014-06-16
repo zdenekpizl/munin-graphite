@@ -71,7 +71,7 @@ function comparePluginsCategory(a, b) {
     var plugin_a_category = a['plugin'][plugin_name_a]['graph_category']+plugin_name_a;
     var plugin_b_category = b['plugin'][plugin_name_b]['graph_category']+plugin_name_b;
     var result = 0;
-    
+
     if (plugin_a_category < plugin_b_category)
          result = -1;
     if (plugin_a_category > plugin_b_category)
@@ -211,7 +211,7 @@ var func = function(callback) {
         var plugin_name = plugins[i]['plugin_name']
         var plugin = plugins[i]['plugin'][plugin_name];
 
-        var g_title = plugin['graph_title'] || 'Graph title not defined by plugin';
+        var g_title = plugin['graph_title'] || 'Graph title not defined by plugin.';
         var g_infofound = false;
         var g_info = plugin['graph_info'] || '';
         var g_args = plugin['graph_args'] || '';
@@ -234,7 +234,7 @@ var func = function(callback) {
         var tempdslength = 0;
 
         if (g_info.localeCompare('') == 0) {
-            g_info = 'Graph info not defined';
+            g_info = 'Graph info not defined by plugin.';
         }
         else {
             g_infofound = true;
@@ -271,10 +271,10 @@ var func = function(callback) {
                 // append information about datasource if any
                 if("info" in plugin[d]) {
                     if (g_infofound) {
-                        g_info += "<br/><u>" + d + "</u> - " + plugin[d]["info"] + ".";
+                        g_info += "<br/><u>" + d + "</u> - " + plugin[d]["info"];
                     }
                     else {
-                        g_info = "<u>" + d + "</u> - " + plugin[d]["info"] + ".";
+                        g_info = "<br/><u>" + d + "</u> - " + plugin[d]["info"];
                         g_infofound = true;
                     }
                 }
