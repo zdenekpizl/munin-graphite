@@ -439,7 +439,7 @@ var func = function(callback) {
         // populate nodes into list
         var nodes_list = "<ul>";
         for (var fnode in hosts.hits.hits) {
-            var node_host = fnode.fields.host;
+            var node_host = hosts.hits.hits[fnode].fields.host[0];
             nodes_list += "<li>"+node_host+"</li>";
         }
         nodes_list += "</ul>";
