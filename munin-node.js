@@ -212,7 +212,7 @@ var func = function(callback) {
         var plugin = plugins[i]['plugin'][plugin_name];
 
         var g_title = plugin['graph_title'] || 'Graph title not defined';
-        var g_info = plugin['graph_info'] || 'Graph info not defined';
+        var g_info = plugin['graph_info'] || 'Graph info not supplied by plugin';
         var g_args = plugin['graph_args'] || '';
         var g_category = plugin['graph_category'] || 'misc';
         var g_period = plugin['graph_period'] || 'second';
@@ -359,13 +359,12 @@ var func = function(callback) {
         }
 
         // prepare HTML snippet with plugin's information
-        var plugin_information='<div><ul style="list-style:none; padding-left: 2px;">' +
-            '<li><strong>Name</strong>:' + plugin_name + '</li>' +
-            '<li><strong>Info</strong>:' + plugin_information + '</li>' +
-            '<li><strong>Stacked</strong>:' + g_order + '</li>' +
-            '<li><strong>Order of metrics</strong>:' + g_order + '</li>' +
-            '<li><strong>Colours of metrics</strong>' + g_aliascolors.length > 0? "Colours specified":"Colour not specified" + '</li>' +
-            '</ul></div>';
+        var plugin_information;
+        plugin_information = '<div><ul style="list-style:none; padding-left: 0px; padding-bottom: 2px;">';
+        plugin_information += '<li><strong>Name</strong>:' + plugin_name + '</li>';
+        plugin_information += '<li><strong>Info</strong>:' + g_info + '</li>';
+        plugin_information += '<li><strong>Stacked</strong>:' + g_stacked?"Graph is stacked":"Graph is not stacked" + '</li>';
+        plugin_information += '</ul></div>';
 
         // create rows with targets and appropriate configuration
         dashboard.rows.push({
