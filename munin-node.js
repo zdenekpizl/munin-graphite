@@ -361,9 +361,11 @@ var func = function(callback) {
         // prepare HTML snippet with plugin's information
         var plugin_information;
         plugin_information = '<div><ul style="list-style:none; padding-left: 0px; padding-bottom: 2px;">';
-        plugin_information += '<li><strong>Name</strong>:' + plugin_name + '</li>';
-        plugin_information += '<li><strong>Info</strong>:' + g_info + '</li>';
-        plugin_information += '<li><strong>Stacked</strong>:' + g_stacked?"Graph is stacked":"Graph is not stacked" + '</li>';
+        plugin_information += '<li><strong>Name</strong>: ' + plugin_name + '</li>';
+        plugin_information += '<li><strong>Info</strong>: ' + g_info + '</li>';
+        plugin_information += '<li><strong>Stacked</strong>: ';
+        plugin_information += g_stacked?"Graph is stacked":"Graph is not stacked";
+        plugin_information += '</li>';
         plugin_information += '</ul></div>';
 
         // create rows with targets and appropriate configuration
