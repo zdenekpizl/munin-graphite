@@ -195,6 +195,7 @@ class Munin():
         self._sock.sendall("config %s\n" % plugin)
         ismultigraph = 0
         response = {plugin: {}}
+        ismultigraph = 0
         multigraph = plugin
 
         for current_line in self._iterline():

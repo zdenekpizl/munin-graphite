@@ -169,7 +169,11 @@ def main():
                 print "  Config %s: %s" % (current_plugin,plugins_config)
                 logger.debug("Thread %s: Plugin Config: %s", munin.hostname, plugins_config)
 
-        host['prefix'] = cfg.prefix
+        try:
+            host['prefix']
+        except KeyError:
+            host['prefix'] = cfg.prefix
+
         host['plugins'] = hostplugins
         if cfg.displayname:
             host['host'] = cfg.displayname
