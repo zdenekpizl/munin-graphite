@@ -250,7 +250,7 @@ if(!_.isUndefined(ARGS.node) && !_.isUndefined(ARGS.graphitekey) ) {
                         g_areafill = (plugin[d]["draw"].substr(4) || 4);
 
                     // append information about datasource if any
-                    if (plugin[d].hasOwnProperty("info") in plugin[d]) {
+                    if (plugin[d].hasOwnProperty("info")) {
                         if (g_infofound) {
                             g_info += "<br/><u>" + d + "</u> - " + plugin[d]["info"];
                         }
@@ -261,7 +261,7 @@ if(!_.isUndefined(ARGS.node) && !_.isUndefined(ARGS.graphitekey) ) {
                     }
 
                     a = plugin[d]["label"] || d;
-                    if(plugin[d].hasOwnProperty("colour") in plugin[d]) {
+                    if(plugin[d].hasOwnProperty("colour")) {
                         g_aliascolors[a] = "#"+ plugin[d]["colour"];
                     }
                     ta.target = "alias("+t+", '"+a+"')";
