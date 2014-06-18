@@ -72,6 +72,8 @@ function comparePluginsCategory(a, b) {
     var plugin_b_category = b['plugin'][plugin_name_b]['graph_category']+plugin_name_b;
     var result = 0;
 
+    plugin_a_category = plugin_a_category.toLowerCase();
+    plugin_b_category = plugin_b_category.toLowerCase();
     if (plugin_a_category < plugin_b_category)
          result = -1;
     if (plugin_a_category > plugin_b_category)
