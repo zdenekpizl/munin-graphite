@@ -89,7 +89,7 @@ class Munin():
         except socket.error:
             self.logger.exception("Thread %s: Unable to connect to Munin host %s, port: %s",
                              self.hostname, self.hostname, self.port)
-            sys.exit(1)
+            pass
 
         try:
             self._conn = self._sock.makefile()
@@ -199,10 +199,10 @@ class Munin():
         multigraph = plugin
 
         for current_line in self._iterline():
-        
+
 #            print "Line: %s\n" % current_line
 #            print "Response start: %r" %response
-        
+
             if current_line.startswith("multigraph "):
                 multigraph = current_line[11:]
                 ismultigraph = 1
@@ -254,7 +254,7 @@ class Munin():
                 self.plugins_config[current_plugin]
             except KeyError:
                 self.plugins_config[current_plugin] = self.get_config(current_plugin)
-#                self.plugins_config[current_plugin]['ismultigraph'] = ismultigraph 
+#                self.plugins_config[current_plugin]['ismultigraph'] = ismultigraph
                 self.logger.debug("Thread %s: Plugin Config: %s", self.hostname, self.plugins_config[current_plugin])
 
             plugin_data = self.fetch(current_plugin)
@@ -264,7 +264,7 @@ class Munin():
                     #print "\n>>>>>>>>>>>>>>>>>> current plugin: %s" % current_plugin
                     #print ">>>>>>>>>>>>>>>>>> multigraph: %s" % multigraph
                     #print ">>>>>>>>>>>>>>>>>> plugin_data: %r" % plugin_data
-                    
+
                     try:
                         self.send_to_carbon(epoch_timestamp,
                                             current_plugin,
