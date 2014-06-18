@@ -92,7 +92,7 @@ def read_configuration(configfile):
     @param configfile: full filepath to configuration file
     @rtype : object
     """
-    
+
     cf = ConfigParser.ConfigParser()
     hostscfg = []
     try:
@@ -169,13 +169,17 @@ def main():
                 #print "  Config %s: %s" % (current_plugin,plugins_config)
                 logger.debug("Thread %s: Plugin Config: %s", munin.hostname, plugins_config)
 
+        host['plugins'] = hostplugins
+        # we have to define metric's prefix if there is not any
         try:
             host['prefix']
         except KeyError:
             host['prefix'] = cfg.prefix
-
-        host['plugins'] = hostplugins
-        host['host'] = host['displayname']
+        # we have to define displayname if there is not any
+        try:
+            host['displayname']
+        except KeyError:
+            host['displayname'] = host['host'].split('.')[0]
 
     try:
         es = ES.Elasticsearch(args.es, sniff_on_start=False)

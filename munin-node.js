@@ -29,7 +29,7 @@ function searchESForNodes(config, searchTerm) {
 
     // Form up any query here
     // '{ "fields": [ "host", "prefix" ], "query": { "regexp": { "host": ".*" }}, "sort": { "host" : "asc" }}}'
-    var esquery = '{"fields": [ "host", "prefix" ], "query": { "regexp": { "host": "' + searchTerm + '", "prefix": "'+config.prefix+'"}}}';
+    var esquery = '{"from" : 0, "size" : 1024, "fields": [ "host", "prefix", "displayname" ], "query": { "regexp": { "host": "' + searchTerm + '", "prefix": "'+config.prefix+'"}}}';
 
     // POST the query to ES
     var json = jQuery.ajax({
@@ -230,10 +230,12 @@ if(!_.isUndefined(ARGS.node)) {
                     }
                     // how to interpret datapoints
                     //if ("type" in plugin[d] && plugin[d]["type"] == "DERIVE")
-                    if (plugin[d].hasOwnProperty("type") && plugin[d]["type"] == "DERIVE")
+                    if (plugin[d].hasOwnProperty("type") && plugin[d]["type"] == "DERIVE") {
                         t = "derivative(" + t + ")";
-                    if ((plugin[d].hasOwnProperty("type") && plugin[d]["type"] == "COUNTER")
+                    }
+                    if (plugin[d].hasOwnProperty("type") && plugin[d]["type"] == "COUNTER") {
                         t = "perSecond(" + t + ")";
+                    }
 
                     // style of line/area
                     if (plugin[d].hasOwnProperty("draw") && plugin[d]["draw"].substr(0,9) == "AREASTACK")
@@ -434,8 +436,16 @@ else {
     // populate nodes into list
     var nodes_list = "<ul>";
     for (var fnode in hosts.hits.hits) {
-        var node_host = hosts.hits.hits[fnode].fields.host[0];
-        nodes_list += "<li><a href='"+window.location+"?node="+node_host+"'>"+node_host+"</a></li>";
+        var node_host;
+        var node_key;
+
+        if (hosts.hits.hits[fnode].fields.hasOwnProperty('host')) {
+            node_host = hosts.hits.hits[fnode].fields.host[0];
+        }
+        if (hosts.hits.hits[fnode].fields.hasOwnProperty('displayname')) {
+            node_key = hosts.hits.hits[fnode].fields.displayname[0];
+        }
+        nodes_list += "<li><a href='"+window.location+"?node="+node_key+"'>"+node_host+"</a></li>";
     }
     nodes_list += "</ul>";
 
