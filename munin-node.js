@@ -132,7 +132,7 @@ if(!_.isUndefined(ARGS.line)) {
 }
 
 // fill in arguments provided from URL
-if(!_.isUndefined(ARGS.node && !_.isUndefined(ARGS.graphitekey )) {
+if(!_.isUndefined(ARGS.node) && !_.isUndefined(ARGS.graphitekey) ) {
     node = ARGS.node;
     node_key = ARGS.graphitekey;
 
