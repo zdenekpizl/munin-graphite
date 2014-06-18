@@ -193,6 +193,7 @@ class Munin():
     def get_config(self, plugin):
         """Get config values for Munin plugin."""
         self._sock.sendall("config %s\n" % plugin)
+        ismultigraph = 0
         response = {plugin: {}}
         ismultigraph = 0
         multigraph = plugin
@@ -229,7 +230,7 @@ class Munin():
 
 #            print "Response final: %r\n" %response
 
-        response['ismultigraph'] = ismultigraph
+	response['ismultigraph'] = ismultigraph
         return response
 
     def process_host_stats(self):
@@ -253,6 +254,7 @@ class Munin():
                 self.plugins_config[current_plugin]
             except KeyError:
                 self.plugins_config[current_plugin] = self.get_config(current_plugin)
+#                self.plugins_config[current_plugin]['ismultigraph'] = ismultigraph 
                 self.logger.debug("Thread %s: Plugin Config: %s", self.hostname, self.plugins_config[current_plugin])
 
             plugin_data = self.fetch(current_plugin)
