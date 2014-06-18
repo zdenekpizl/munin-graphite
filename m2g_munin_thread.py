@@ -89,7 +89,7 @@ class Munin():
         except socket.error:
             self.logger.exception("Thread %s: Unable to connect to Munin host %s, port: %s",
                              self.hostname, self.hostname, self.port)
-            pass
+            sys.exit(1)
 
         try:
             self._conn = self._sock.makefile()
