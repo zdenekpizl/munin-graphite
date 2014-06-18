@@ -82,7 +82,8 @@ function comparePluginsCategory(a, b) {
 
 // Setup variables
 var node = '';
-var def_linewidth = 2;
+var graphitekey = '';
+var def_linewidth = 1;
 // Set a default timespan if one isn't specified
 var timspan = '6h';
 // Intialize a skeleton object of dashboard
@@ -131,8 +132,9 @@ if(!_.isUndefined(ARGS.line)) {
 }
 
 // fill in arguments provided from URL
-if(!_.isUndefined(ARGS.node)) {
+if(!_.isUndefined(ARGS.node && !_.isUndefined(ARGS.graphitekey )) {
     node = ARGS.node;
+    node_key = ARGS.graphitekey;
 
     // searchES() should return just 1 result with a node or empty set
     var data = searchESForNodePlugins(config, node);
@@ -222,11 +224,11 @@ if(!_.isUndefined(ARGS.node)) {
                 if (d.substr(0,6) != 'graph_') {
                     if ("ismultigraph" in plugins[i]['plugin'] && plugins[i]['plugin']['ismultigraph'] == 1)
                     {
-                        t = prefix+'.'+node+'.'+g_category+'.'+plugins[i]['multigraphpath']+'.'+plugin_name+'.'+d;
+                        t = prefix+'.'+node_key+'.'+g_category+'.'+plugins[i]['multigraphpath']+'.'+plugin_name+'.'+d;
                     }
                     else
                     {
-                        t = prefix+'.'+node+'.'+g_category+'.'+plugin_name+'.'+d;
+                        t = prefix+'.'+node_key+'.'+g_category+'.'+plugin_name+'.'+d;
                     }
                     // how to interpret datapoints
                     //if ("type" in plugin[d] && plugin[d]["type"] == "DERIVE")
@@ -445,7 +447,7 @@ else {
         if (hosts.hits.hits[fnode].fields.hasOwnProperty('displayname')) {
             node_key = hosts.hits.hits[fnode].fields.displayname[0];
         }
-        nodes_list += "<li><a href='"+window.location+"?node="+node_key+"'>"+node_host+"</a></li>";
+        nodes_list += "<li><a href='"+window.location+"?node="+node_host+"&graphitekey="+node_key+"'>"+node_host+"</a></li>";
     }
     nodes_list += "</ul>";
 
