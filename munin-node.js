@@ -246,7 +246,7 @@ if(!_.isUndefined(ARGS.node) && !_.isUndefined(ARGS.graphitekey) ) {
                         g_stacked = true;
                     if (plugin[d].hasOwnProperty("draw") && plugin[d]["draw"].substr(0,4) == "LINE")
                         g_linewidth = (parseInt(plugin[d]["draw"].substr(4)) || g_linewidth);
-                    if (plugin[d].hasOwnProperty("draw") in plugin[d] && plugin[d]["draw"].substr(0,4) == "AREA" && g_stacked == 'false')
+                    if (plugin[d].hasOwnProperty("draw") && plugin[d]["draw"].substr(0,4) == "AREA" && g_stacked == 'false')
                         g_areafill = (plugin[d]["draw"].substr(4) || 4);
 
                     // append information about datasource if any
