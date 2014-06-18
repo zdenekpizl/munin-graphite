@@ -229,23 +229,24 @@ if(!_.isUndefined(ARGS.node)) {
                         t = prefix+'.'+node+'.'+g_category+'.'+plugin_name+'.'+d;
                     }
                     // how to interpret datapoints
-                    if ("type" in plugin[d] && plugin[d]["type"] == "DERIVE")
+                    //if ("type" in plugin[d] && plugin[d]["type"] == "DERIVE")
+                    if (plugin[d].hasOwnProperty("type") && plugin[d]["type"] == "DERIVE")
                         t = "derivative(" + t + ")";
-                    if ("type" in plugin[d] && plugin[d]["type"] == "COUNTER")
+                    if ((plugin[d].hasOwnProperty("type") && plugin[d]["type"] == "COUNTER")
                         t = "perSecond(" + t + ")";
 
                     // style of line/area
-                    if ("draw" in plugin[d] && plugin[d]["draw"].substr(0,9) == "AREASTACK")
+                    if (plugin[d].hasOwnProperty("draw") && plugin[d]["draw"].substr(0,9) == "AREASTACK")
                         g_stacked = true;
-                    if ("draw" in plugin[d] && plugin[d]["draw"].substr(0,5) == "STACK")
+                    if (plugin[d].hasOwnProperty("draw") && plugin[d]["draw"].substr(0,5) == "STACK")
                         g_stacked = true;
-                    if ("draw" in plugin[d] && plugin[d]["draw"].substr(0,4) == "LINE")
+                    if (plugin[d].hasOwnProperty("draw") && plugin[d]["draw"].substr(0,4) == "LINE")
                         g_linewidth = (parseInt(plugin[d]["draw"].substr(4)) || g_linewidth);
-                    if ("draw" in plugin[d] && plugin[d]["draw"].substr(0,4) == "AREA" && g_stacked == 'false')
+                    if (plugin[d].hasOwnProperty("draw") in plugin[d] && plugin[d]["draw"].substr(0,4) == "AREA" && g_stacked == 'false')
                         g_areafill = (plugin[d]["draw"].substr(4) || 4);
 
                     // append information about datasource if any
-                    if("info" in plugin[d]) {
+                    if (plugin[d].hasOwnProperty("info") in plugin[d]) {
                         if (g_infofound) {
                             g_info += "<br/><u>" + d + "</u> - " + plugin[d]["info"];
                         }
@@ -256,7 +257,7 @@ if(!_.isUndefined(ARGS.node)) {
                     }
 
                     a = plugin[d]["label"] || d;
-                    if("colour" in plugin[d]) {
+                    if(plugin[d].hasOwnProperty("colour") in plugin[d]) {
                         g_aliascolors[a] = "#"+ plugin[d]["colour"];
                     }
                     ta.target = "alias("+t+", '"+a+"')";

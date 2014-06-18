@@ -66,7 +66,7 @@ def parse_args():
                         type=int,
                         help="Verbosity level. 1:ERROR, 2:INFO, 3:DEBUG. Default: %(default)d")
 
-    args = parser.parse_args()
+    args, unknown = parser.parse_known_args()
     return args
 
 
@@ -92,7 +92,7 @@ def read_configuration(configfile):
     @param configfile: full filepath to configuration file
     @rtype : object
     """
-
+    
     cf = ConfigParser.ConfigParser()
     hostscfg = []
     try:
@@ -166,7 +166,7 @@ def main():
                 plugins_config["plugin"] = munin.get_config(current_plugin)
                 plugins_config["plugin_name"]=current_plugin
                 hostplugins.append(plugins_config.copy())
-                print "  Config %s: %s" % (current_plugin,plugins_config)
+                #print "  Config %s: %s" % (current_plugin,plugins_config)
                 logger.debug("Thread %s: Plugin Config: %s", munin.hostname, plugins_config)
 
         try:
@@ -175,8 +175,7 @@ def main():
             host['prefix'] = cfg.prefix
 
         host['plugins'] = hostplugins
-        if cfg.displayname:
-            host['host'] = cfg.displayname
+        host['host'] = host['displayname']
 
     try:
         es = ES.Elasticsearch(args.es, sniff_on_start=False)
