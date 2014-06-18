@@ -82,7 +82,7 @@ function comparePluginsCategory(a, b) {
 
 // Setup variables
 var node = '';
-var graphitekey = '';
+var node_key = '';
 var def_linewidth = 1;
 // Set a default timespan if one isn't specified
 var timspan = '6h';
